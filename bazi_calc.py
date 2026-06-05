@@ -4,7 +4,11 @@ Calculates Four Pillars of Destiny from birth date/time.
 """
 
 from datetime import datetime, date, time, timedelta
-import ephem
+try:
+    import ephem
+    HAS_EPHEM = True
+except ImportError:
+    HAS_EPHEM = False
 
 # ─── 天干地支 Tables ────────────────────────────────────────────
 
