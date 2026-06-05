@@ -1,0 +1,14 @@
+*
+!.gitignore
+!app.py
+!vercel.json
+!requirements.txt
+!bazi_calc.py
+!interpreter.py
+!compatibility.py
+!solar_time.py
+!cities.json
+!Procfile
+!railway.json
+!templates/
+!templates/*.html
