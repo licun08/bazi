@@ -52,16 +52,22 @@
             background: linear-gradient(90deg, transparent, #8b4513, transparent);
             margin: 10px auto; opacity: 0.35; }
 
-        .chart {
+        .section {
             background: rgba(255, 252, 245, 0.85);
             border: 1px solid rgba(139, 69, 19, 0.12);
             padding: 28px; margin-bottom: 20px; position: relative;
         }
-        .chart::before {
+        .section::before {
             content: ''; position: absolute;
             top: 8px; left: 8px; right: 8px; bottom: 8px;
             border: 1px solid rgba(139, 69, 19, 0.06);
             pointer-events: none;
+        }
+        .section-title {
+            font-size: 0.85em; font-weight: 400;
+            color: #5c2e0e; letter-spacing: 4px;
+            margin-bottom: 16px; padding-bottom: 8px;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.1);
         }
 
         .daymaster { text-align: center; margin-bottom: 20px; }
@@ -91,23 +97,36 @@
         .chart-meta { text-align: center; margin-top: 14px; font-size: 0.75em; color: #b8a88a; }
         .chart-meta .name { font-size: 1em; color: #8b7355; }
 
-        .reading {
-            background: rgba(255, 252, 245, 0.85);
-            border: 1px solid rgba(139, 69, 19, 0.12);
-            padding: 28px; margin-bottom: 20px; position: relative;
+        /* ── Score Card ── */
+        .score-layout { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; }
+        .score-svg { flex: 0 0 280px; }
+        .score-info { flex: 1; min-width: 200px; }
+        .score-info .composite-big { font-size: 2.4em; color: #5c2e0e; font-weight: bold; line-height: 1; }
+        .score-info .composite-label { font-size: 0.7em; color: #b8a88a; letter-spacing: 2px; margin-bottom: 8px; }
+        .score-info .title-card {
+            background: rgba(92, 46, 14, 0.04);
+            border: 1px solid rgba(139, 69, 19, 0.08);
+            padding: 10px 14px; margin: 12px 0;
+            text-align: center;
         }
-        .reading::before {
-            content: ''; position: absolute;
-            top: 8px; left: 8px; right: 8px; bottom: 8px;
-            border: 1px solid rgba(139, 69, 19, 0.06);
-            pointer-events: none;
+        .score-info .title-card .honor-title {
+            font-size: 1.05em; color: #5c2e0e; letter-spacing: 2px;
+            font-weight: 400;
         }
-        .reading .rtitle {
-            font-size: 0.85em; font-weight: 400;
-            color: #5c2e0e; letter-spacing: 4px;
-            margin-bottom: 16px; padding-bottom: 8px;
-            border-bottom: 1px solid rgba(139, 69, 19, 0.1);
+        .score-info .title-card .honor-sub {
+            font-size: 0.7em; color: #b8a88a; letter-spacing: 3px; margin-top: 4px;
         }
+        .score-info .stars { font-size: 1.3em; letter-spacing: 4px; margin: 4px 0; color: #d4a020; }
+        .score-info .chosen-label { font-size: 0.8em; color: #8b7355; letter-spacing: 2px; }
+
+        /* Dimension bars */
+        .dim-bars { margin-top: 16px; }
+        .dim-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+        .dim-row .dname { font-size: 0.7em; color: #8b7355; flex: 0 0 70px; letter-spacing: 1px; }
+        .dim-row .dbar { flex: 1; height: 8px; background: rgba(139, 69, 19, 0.08); border-radius: 0; position: relative; }
+        .dim-row .dbar-fill { height: 100%; background: #5c2e0e; border-radius: 0; transition: width 0.3s; opacity: 0.7; }
+        .dim-row .dval { font-size: 0.7em; color: #5c2e0e; flex: 0 0 28px; text-align: right; }
+
         .reading-body { font-size: 1em; line-height: 1.9; color: #3c3426; }
         .reading-body h3 {
             font-size: 0.9em; font-weight: 400; color: #5c2e0e;
@@ -133,10 +152,12 @@
         @media print { body { background: #fff; } .back-link { display: none; } }
         @media (max-width: 600px) {
             .container { padding: 28px 12px; }
-            .chart, .reading { padding: 20px 14px; }
+            .section, .reading { padding: 20px 14px; }
             .pillar-grid { grid-template-columns: repeat(2, 1fr); }
             .lang-switch { right: 12px; top: 12px; }
             .lang-switch a { padding: 4px 10px; font-size: 0.7em; }
+            .score-svg { flex: 0 0 220px; }
+            .score-info .composite-big { font-size: 1.8em; }
         }
     </style>
 </head>
@@ -160,7 +181,7 @@
     </div>
 
     <!-- Chart Display -->
-    <div class="chart">
+    <div class="section">
         <div class="daymaster">
             <div class="dm-label">{% if lang == 'zh' %}日 主{% else %}DAY MASTER{% endif %}</div>
             <div class="dm-char">{{ bazi.day_master.stem }}</div>
@@ -197,9 +218,47 @@
         </div>
     </div>
 
+    <!-- Score Card -->
+    <div class="section">
+        <div class="section-title">{% if lang == 'zh' %}命 盘 图 谱{% else %}Destiny Matrix{% endif %}</div>
+        <div class="score-layout">
+            <div class="score-svg">{{ hex_svg | safe }}</div>
+            <div class="score-info">
+                <div class="composite-label">{% if lang == 'zh' %}综 合 评 分{% else %}COMPOSITE SCORE{% endif %}</div>
+                <div class="composite-big">{{ scores.composite }}<span style="font-size:0.4em;color:#b8a88a;font-weight:400;">/100</span></div>
+
+                <div class="stars">{{ scores.stars }}</div>
+                <div class="chosen-label">{{ scores.chosen_emoji }} {{ scores.chosen_label }}</div>
+
+                <div class="title-card">
+                    <div class="honor-title">{{ scores.title }}</div>
+                    <div class="honor-sub">{% if lang == 'zh' %}荣 誉 称 号{% else %}HONORIFIC TITLE{% endif %}</div>
+                </div>
+
+                <div class="dim-bars">
+                    {% set dim_keys = scores.dimension_keys %}
+                    {% set dim_names = scores.dimension_names %}
+                    {% set dim_vals = [scores.dimensions[dim_keys[0]],
+                                       scores.dimensions[dim_keys[1]],
+                                       scores.dimensions[dim_keys[2]],
+                                       scores.dimensions[dim_keys[3]],
+                                       scores.dimensions[dim_keys[4]],
+                                       scores.dimensions[dim_keys[5]]] %}
+                    {% for i in range(6) %}
+                    <div class="dim-row">
+                        <div class="dname">{{ dim_names[i].replace('\n', ' ') }}</div>
+                        <div class="dbar"><div class="dbar-fill" style="width:{{ dim_vals[i] }}%"></div></div>
+                        <div class="dval">{{ dim_vals[i] }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Reading -->
-    <div class="reading">
-        <div class="rtitle">{% if lang == 'zh' %}命 理 推 演{% else %}Reading{% endif %}</div>
+    <div class="section">
+        <div class="section-title">{% if lang == 'zh' %}命 理 推 演{% else %}Reading{% endif %}</div>
         <div class="reading-body">
             {% for line in reading.split('\n') %}
                 {% if line.startswith('## ') %}

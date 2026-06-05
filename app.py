@@ -16,6 +16,7 @@ from bazi_calc import BaZiEngine, format_result_for_api
 from interpreter import get_reading, is_configured
 from solar_time import compute_adjusted_birth_time, search_city
 from compatibility import analyze as compat_analyze
+from bazi_scores import compute_scores, generate_hex_svg
 
 app = Flask(__name__, 
             template_folder=os.path.join(BASE_DIR, 'templates'),
@@ -83,10 +84,16 @@ def calculate():
         
         reading = get_reading(bazi_data, lang=lang)
         reading_html = markdown_to_html(reading)
-        
-        return render_template('result.html', 
+
+        # Compute entertainment scores
+        scores = compute_scores(bazi_data, lang=lang)
+        hex_svg = generate_hex_svg(scores, lang=lang)
+
+        return render_template('result.html',
                              bazi=bazi_data,
                              reading=reading_html,
+                             scores=scores,
+                             hex_svg=hex_svg,
                              lang=lang,
                              solar_info=solar_info,
                              city=city,
