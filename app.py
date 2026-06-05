@@ -7,13 +7,19 @@ import sys
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# ── Fix paths for Vercel serverless ──
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, BASE_DIR)
+os.chdir(BASE_DIR)
+
 from bazi_calc import BaZiEngine, format_result_for_api
 from interpreter import get_reading, is_configured
 from solar_time import compute_adjusted_birth_time, search_city
 from compatibility import analyze as compat_analyze
 
-app = Flask(__name__)
+app = Flask(__name__, 
+            template_folder=os.path.join(BASE_DIR, 'templates'),
+            static_folder=os.path.join(BASE_DIR, 'static'))
 engine = BaZiEngine()
 
 def get_lang():

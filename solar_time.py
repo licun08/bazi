@@ -7,7 +7,10 @@ import os
 from datetime import datetime, timedelta
 from math import sin, radians
 
-CITIES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cities.json')
+CITIES_PATH = os.environ.get(
+    'CITIES_JSON_PATH',
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cities.json')
+)
 
 # Load cities database
 CITIES = {}
