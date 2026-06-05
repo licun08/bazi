@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if lang == 'zh' %}合婚 · 八字命理{% else %}Compatibility · BaZi{% endif %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Georgia','Noto Serif SC','Times New Roman',serif;
+            background:#f5f0e8; color:#2c2416;
+            background-image:radial-gradient(ellipse at 20% 50%, rgba(180,120,60,0.03) 0%, transparent 50%),radial-gradient(ellipse at 80% 50%, rgba(180,120,60,0.03) 0%, transparent 50%);
+        }
+        .ink-top { position:fixed; top:0; left:0; width:100%; height:4px;
+            background:linear-gradient(90deg,transparent 0%,#8b4513 15%,#5c2e0e 50%,#8b4513 85%,transparent 100%); opacity:0.6; z-index:10; }
+        .container { max-width:820px; margin:0 auto; padding:40px 24px; }
+        .lang-switch { position:fixed; top:16px; right:24px; z-index:20; display:flex;
+            border:1px solid rgba(139,69,19,0.15); background:rgba(255,252,245,0.9); }
+        .lang-switch a { padding:6px 14px; font-size:0.75em; letter-spacing:1px; text-decoration:none; color:#8b7355; }
+        .lang-switch a:hover { color:#5c2e0e; background:rgba(139,69,19,0.05); }
+        .lang-switch a.active { color:#f5f0e8; background:#5c2e0e; }
+        .header { text-align:center; margin-bottom:40px; }
+        .seal { display:inline-block; width:52px; height:52px; border:2px solid #8b2500; color:#8b2500;
+            font-size:18px; line-height:52px; text-align:center; transform:rotate(-3deg); margin-bottom:14px; opacity:0.8; }
+        .header h1 { font-size:2em; font-weight:400; color:#2c2416; letter-spacing:6px; }
+        .header .divider { width:60px; height:1px; background:linear-gradient(90deg,transparent,#8b4513,transparent); margin:12px auto; opacity:0.4; }
+        .card { background:rgba(255,252,245,0.85); border:1px solid rgba(139,69,19,0.12); padding:28px; margin-bottom:20px; position:relative; }
+        .card::before { content:''; position:absolute; top:8px; left:8px; right:8px; bottom:8px;
+            border:1px solid rgba(139,69,19,0.06); pointer-events:none; }
+        .card-title { font-size:0.85em; font-weight:400; color:#5c2e0e; letter-spacing:3px;
+            margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid rgba(139,69,19,0.1); }
+        .person-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+        .person-col { border:1px solid rgba(139,69,19,0.08); padding:16px; background:rgba(255,252,245,0.4); }
+        .person-col h3 { font-size:0.8em; font-weight:400; color:#5c2e0e; letter-spacing:3px; margin-bottom:12px; }
+        .form-row { display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+        .form-group { flex:1; min-width:70px; }
+        .form-group label { display:block; color:#8b7355; font-size:0.65em; letter-spacing:1px; margin-bottom:3px; }
+        .form-group input,.form-group select { width:100%; padding:8px 10px; background:rgba(255,252,245,0.6);
+            border:1px solid rgba(139,69,19,0.2); color:#2c2416; font-family:inherit; font-size:0.85em; }
+        .form-group input:focus,.form-group select:focus { outline:none; border-color:#8b4513; }
+        .btn-primary { width:100%; padding:14px; background:#5c2e0e; border:none; color:#f5f0e8;
+            font-family:inherit; font-size:1em; letter-spacing:6px; cursor:pointer; transition:all 0.3s; margin-top:10px; }
+        .btn-primary:hover { background:#7a3d14; }
+        .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+        .back-link { display:block; text-align:center; color:#8b7355; text-decoration:none; font-size:0.85em; letter-spacing:2px; margin-top:24px; }
+        .back-link:hover { color:#5c2e0e; }
+        .footer { text-align:center; margin-top:40px; color:#b8a88a; font-size:0.65em; letter-spacing:2px; font-style:italic; }
+        @media (max-width:600px) { .person-grid { grid-template-columns:1fr; } .container { padding:32px 12px; } }
+    </style>
+</head>
+<body>
+<div class="ink-top"></div>
+<div class="lang-switch">
+    <a href="/compatibility?lang=zh" class="{% if lang == 'zh' %}active{% endif %}">中</a>
+    <a href="/compatibility?lang=en" class="{% if lang == 'en' %}active{% endif %}">EN</a>
+</div>
+<div class="container">
+    <div class="header">
+        <div class="seal">合</div>
+        <h1>{% if lang == 'zh' %}合 婚{% else %}Compatibility{% endif %}</h1>
+        <div class="divider"></div>
+    </div>
+
+    <form action="/compatibility" method="POST">
+        <input type="hidden" name="lang" value="{{ lang }}">
+        <div class="card">
+            <div class="card-title">{% if lang == 'zh' %}录入双方生辰{% else %}Enter Both Birth Dates{% endif %}</div>
+            {% if error %}<div style="border:1px solid rgba(200,60,60,0.3);padding:10px;color:#8b2020;margin-bottom:12px;">{{ error }}</div>{% endif %}
+            <div class="person-grid">
+                <div class="person-col">
+                    <h3>{% if lang == 'zh' %}第一人{% else %}Person 1{% endif %}</h3>
+                    <div class="form-group" style="margin-bottom:8px;">
+                        <label>{% if lang == 'zh' %}性别{% else %}Gender{% endif %}</label>
+                        <select name="gender1">
+                            <option value="male">{% if lang == 'zh' %}男{% else %}Male{% endif %}</option>
+                            <option value="female">{% if lang == 'zh' %}女{% else %}Female{% endif %}</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>{% if lang == 'zh' %}年{% else %}Year{% endif %}</label><input type="number" name="year1" min="1900" max="2030" required></div>
+                        <div class="form-group"><label>{% if lang == 'zh' %}月{% else %}Mon{% endif %}</label><input type="number" name="month1" min="1" max="12" required></div>
+                        <div class="form-group"><label>{% if lang == 'zh' %}日{% else %}Day{% endif %}</label><input type="number" name="day1" min="1" max="31" required></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:2">
+                            <label>{% if lang == 'zh' %}时辰{% else %}Hour{% endif %}</label>
+                            <select name="hour1">
+                                <option value="0">00:00</option><option value="1">01:00</option><option value="2">02:00</option><option value="3">03:00</option>
+                                <option value="4">04:00</option><option value="5">05:00</option><option value="6">06:00</option><option value="7">07:00</option>
+                                <option value="8">08:00</option><option value="9">09:00</option><option value="10">10:00</option><option value="11">11:00</option>
+                                <option value="12" selected>12:00</option><option value="13">13:00</option><option value="14">14:00</option><option value="15">15:00</option>
+                                <option value="16">16:00</option><option value="17">17:00</option><option value="18">18:00</option><option value="19">19:00</option>
+                                <option value="20">20:00</option><option value="21">21:00</option><option value="22">22:00</option><option value="23">23:00</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="person-col">
+                    <h3>{% if lang == 'zh' %}第二人{% else %}Person 2{% endif %}</h3>
+                    <div class="form-group" style="margin-bottom:8px;">
+                        <label>{% if lang == 'zh' %}性别{% else %}Gender{% endif %}</label>
+                        <select name="gender2">
+                            <option value="male">{% if lang == 'zh' %}男{% else %}Male{% endif %}</option>
+                            <option value="female" selected>{% if lang == 'zh' %}女{% else %}Female{% endif %}</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>{% if lang == 'zh' %}年{% else %}Year{% endif %}</label><input type="number" name="year2" min="1900" max="2030" required></div>
+                        <div class="form-group"><label>{% if lang == 'zh' %}月{% else %}Mon{% endif %}</label><input type="number" name="month2" min="1" max="12" required></div>
+                        <div class="form-group"><label>{% if lang == 'zh' %}日{% else %}Day{% endif %}</label><input type="number" name="day2" min="1" max="31" required></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:2">
+                            <label>{% if lang == 'zh' %}时辰{% else %}Hour{% endif %}</label>
+                            <select name="hour2">
+                                <option value="0">00:00</option><option value="1">01:00</option><option value="2">02:00</option><option value="3">03:00</option>
+                                <option value="4">04:00</option><option value="5">05:00</option><option value="6">06:00</option><option value="7">07:00</option>
+                                <option value="8">08:00</option><option value="9">09:00</option><option value="10">10:00</option><option value="11">11:00</option>
+                                <option value="12" selected>12:00</option><option value="13">13:00</option><option value="14">14:00</option><option value="15">15:00</option>
+                                <option value="16">16:00</option><option value="17">17:00</option><option value="18">18:00</option><option value="19">19:00</option>
+                                <option value="20">20:00</option><option value="21">21:00</option><option value="22">22:00</option><option value="23">23:00</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">{% if lang == 'zh' %}合 盘{% else %}COMPARE CHARTS{% endif %}</button>
+        </div>
+    </form>
+
+    <a href="/?lang={{ lang }}" class="back-link">{% if lang == 'zh' %}← 个人八字{% else %}← Individual Chart{% endif %}</a>
+
+    <div class="footer"><div style="font-style:normal;color:#c8b898;">道法自然 · 天人合一</div></div>
+</div>
+</body>
+</html>

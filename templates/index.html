@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if lang == 'zh' %}八字命理{% else %}BaZi · Four Pillars{% endif %}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Georgia', 'Noto Serif SC', 'Times New Roman', serif;
+            background: #f5f0e8;
+            color: #2c2416;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse at 20% 50%, rgba(180, 120, 60, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 50%, rgba(180, 120, 60, 0.03) 0%, transparent 50%);
+        }
+        .ink-top { position: fixed; top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, transparent 0%, #8b4513 15%, #5c2e0e 50%, #8b4513 85%, transparent 100%); opacity: 0.6; z-index: 10; }
+        .ink-corner { position: fixed; width: 120px; height: 120px; opacity: 0.04; pointer-events: none; z-index: 10; }
+        .ink-corner.tl { top: 0; left: 0; border-top: 2px solid #5c2e0e; border-left: 2px solid #5c2e0e; }
+        .ink-corner.tr { top: 0; right: 0; border-top: 2px solid #5c2e0e; border-right: 2px solid #5c2e0e; }
+        .ink-corner.bl { bottom: 0; left: 0; border-bottom: 2px solid #5c2e0e; border-left: 2px solid #5c2e0e; }
+        .ink-corner.br { bottom: 0; right: 0; border-bottom: 2px solid #5c2e0e; border-right: 2px solid #5c2e0e; }
+        .container { max-width: 720px; margin: 0 auto; padding: 40px 24px; position: relative; }
+
+        /* ── Language Switcher ── */
+        .lang-switch {
+            position: fixed; top: 16px; right: 24px; z-index: 20;
+            display: flex; gap: 0;
+            border: 1px solid rgba(139, 69, 19, 0.15);
+            background: rgba(255, 252, 245, 0.9);
+        }
+        .lang-switch a {
+            padding: 6px 14px;
+            font-size: 0.75em;
+            letter-spacing: 1px;
+            text-decoration: none;
+            color: #8b7355;
+            transition: all 0.2s;
+        }
+        .lang-switch a:hover { color: #5c2e0e; background: rgba(139, 69, 19, 0.05); }
+        .lang-switch a.active {
+            color: #f5f0e8; background: #5c2e0e;
+        }
+
+        /* ── Header ── */
+        .header { text-align: center; margin-bottom: 40px; }
+        .seal {
+            display: inline-block; width: 52px; height: 52px;
+            border: 2px solid #8b2500; color: #8b2500;
+            font-size: 18px; line-height: 52px; text-align: center;
+            transform: rotate(-3deg); margin-bottom: 14px;
+            letter-spacing: 2px; opacity: 0.8;
+        }
+        .header h1 {
+            font-size: 2.2em; font-weight: 400;
+            color: #2c2416; letter-spacing: 6px;
+            margin-bottom: 2px;
+        }
+        .header .subtitle {
+            font-style: italic; color: #8b7355;
+            font-size: 0.95em; letter-spacing: 2px;
+        }
+        .header .divider {
+            width: 60px; height: 1px;
+            background: linear-gradient(90deg, transparent, #8b4513, transparent);
+            margin: 12px auto; opacity: 0.4;
+        }
+
+        /* ── Card ── */
+        .card {
+            background: rgba(255, 252, 245, 0.85);
+            border: 1px solid rgba(139, 69, 19, 0.12);
+            padding: 32px; margin-bottom: 20px;
+            position: relative;
+        }
+        .card::before {
+            content: ''; position: absolute;
+            top: 8px; left: 8px; right: 8px; bottom: 8px;
+            border: 1px solid rgba(139, 69, 19, 0.06);
+            pointer-events: none;
+        }
+        .card-title {
+            font-size: 0.9em; font-weight: 400;
+            color: #5c2e0e; letter-spacing: 4px;
+            margin-bottom: 20px; padding-bottom: 10px;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.1);
+        }
+
+        .form-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 100px; }
+        .form-group label {
+            display: block; color: #8b7355;
+            font-size: 0.7em; letter-spacing: 2px;
+            margin-bottom: 4px; text-transform: uppercase;
+        }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px 14px;
+            background: rgba(255, 252, 245, 0.6);
+            border: 1px solid rgba(139, 69, 19, 0.2);
+            color: #2c2416; font-family: inherit;
+            font-size: 0.95em; transition: all 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none; border-color: #8b4513;
+            background: rgba(255, 252, 245, 0.9);
+        }
+        .form-group select { cursor: pointer; }
+        .form-group select option { background: #f5f0e8; color: #2c2416; }
+        .form-hint {
+            font-size: 0.72em; color: #b8a88a;
+            margin-top: 2px; font-style: italic;
+        }
+
+        .btn-primary {
+            width: 100%; padding: 14px;
+            background: #5c2e0e; border: none;
+            color: #f5f0e8; font-family: inherit;
+            font-size: 1em; letter-spacing: 6px;
+            cursor: pointer; transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .btn-primary:hover { background: #7a3d14; }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .error-msg {
+            border: 1px solid rgba(200, 60, 60, 0.3);
+            padding: 12px 16px; color: #8b2020;
+            margin-bottom: 16px; font-size: 0.9em;
+        }
+        .loading { display: none; text-align: center; padding: 24px;
+            color: #8b7355; font-style: italic; font-size: 1.05em; }
+        .loading .spinner {
+            display: inline-block; width: 20px; height: 20px;
+            border: 1px solid rgba(139, 69, 19, 0.2);
+            border-top-color: #5c2e0e; border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+            margin-right: 12px; vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Educational Content ── */
+        .edu-section { margin-top: 32px; }
+        .edu-section h3 {
+            font-size: 0.85em; font-weight: 400;
+            color: #5c2e0e; letter-spacing: 3px;
+            margin-bottom: 16px; padding-bottom: 8px;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.08);
+        }
+        .edu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .edu-item {
+            background: rgba(255, 252, 245, 0.6);
+            border: 1px solid rgba(139, 69, 19, 0.08);
+            padding: 20px;
+        }
+        .edu-item .e-label {
+            font-size: 0.75em; letter-spacing: 3px;
+            color: #8b2500; margin-bottom: 6px;
+        }
+        .edu-item .e-title {
+            font-size: 1em; color: #2c2416;
+            margin-bottom: 4px;
+        }
+        .edu-item .e-desc {
+            font-size: 0.82em; color: #8b7355;
+            line-height: 1.6;
+        }
+        .elements { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .element-tag {
+            padding: 6px 16px;
+            border: 1px solid rgba(139, 69, 19, 0.12);
+            font-size: 0.8em; color: #5c2e0e;
+            background: rgba(255, 252, 245, 0.5);
+        }
+
+        .faq-item { margin-bottom: 16px; }
+        .faq-item .faq-q {
+            font-size: 0.85em; color: #5c2e0e;
+            margin-bottom: 4px;
+        }
+        .faq-item .faq-a {
+            font-size: 0.8em; color: #8b7355;
+            line-height: 1.6; padding-left: 12px;
+            border-left: 2px solid rgba(139, 69, 19, 0.1);
+        }
+
+        .footer { text-align: center; margin-top: 48px;
+            color: #b8a88a; font-size: 0.7em; letter-spacing: 2px;
+            font-style: italic; }
+        .footer .cn { font-style: normal; color: #c8b898; margin-top: 4px; }
+
+        @media (max-width: 600px) {
+            .container { padding: 32px 16px; }
+            .card { padding: 20px; }
+            .edu-grid { grid-template-columns: 1fr; }
+            .lang-switch { right: 12px; top: 12px; }
+            .lang-switch a { padding: 4px 10px; font-size: 0.7em; }
+        }
+    </style>
+</head>
+<body>
+<div class="ink-top"></div>
+<div class="ink-corner tl"></div>
+<div class="ink-corner tr"></div>
+<div class="ink-corner bl"></div>
+<div class="ink-corner br"></div>
+
+<div class="lang-switch">
+    <a href="?lang=zh" class="{% if lang == 'zh' %}active{% endif %}">中</a>
+    <a href="?lang=en" class="{% if lang == 'en' %}active{% endif %}">EN</a>
+</div>
+
+<div class="container">
+    <div class="header">
+        <div class="seal">{% if lang == 'zh' %}命{% else %}命{% endif %}</div>
+        <h1>{% if lang == 'zh' %}八字命理{% else %}BaZi · Four Pillars{% endif %}</h1>
+        <div class="subtitle">{% if lang == 'zh' %}四柱推命 · 洞悉天机{% else %}Chinese Astrology · Ancient Wisdom{% endif %}</div>
+        <div class="divider"></div>
+    </div>
+
+    <!-- Form -->
+    <div class="card">
+        <div class="card-title">{% if lang == 'zh' %}录入生辰{% else %}Enter Birth Information{% endif %}</div>
+        
+        {% if error %}
+        <div class="error-msg">{{ error }}</div>
+        {% endif %}
+
+        <form id="baziForm" action="/calculate" method="POST">
+            <input type="hidden" name="lang" value="{{ lang }}">
+            
+            <div class="form-row">
+            <div class="form-group">
+                <label>{% if lang == 'zh' %}性别{% else %}Gender{% endif %}</label>
+                <select name="gender">
+                    <option value="male">{% if lang == 'zh' %}男 / Male{% else %}Male{% endif %}</option>
+                    <option value="female">{% if lang == 'zh' %}女 / Female{% else %}Female{% endif %}</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+                <div class="form-group">
+                    <label>{% if lang == 'zh' %}年{% else %}Year{% endif %}</label>
+                    <input type="number" name="year" min="1900" max="2030" placeholder="{% if lang == 'zh' %}例：1990{% else %}e.g. 1990{% endif %}" required>
+                </div>
+                <div class="form-group">
+                    <label>{% if lang == 'zh' %}月{% else %}Month{% endif %}</label>
+                    <input type="number" name="month" min="1" max="12" placeholder="1–12" required>
+                </div>
+                <div class="form-group">
+                    <label>{% if lang == 'zh' %}日{% else %}Day{% endif %}</label>
+                    <input type="number" name="day" min="1" max="31" placeholder="1–31" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group" style="flex:2">
+                    <label>{% if lang == 'zh' %}时辰{% else %}Hour{% endif %}</label>
+                    <select name="hour">
+                        {% if lang == 'zh' %}
+                        <option value="0">00:00–00:59（子时）</option>
+                        <option value="1">01:00–01:59（丑时）</option>
+                        <option value="2">02:00–02:59（丑时）</option>
+                        <option value="3">03:00–03:59（寅时）</option>
+                        <option value="4">04:00–04:59（寅时）</option>
+                        <option value="5">05:00–05:59（卯时）</option>
+                        <option value="6">06:00–06:59（卯时）</option>
+                        <option value="7">07:00–07:59（辰时）</option>
+                        <option value="8">08:00–08:59（辰时）</option>
+                        <option value="9">09:00–09:59（巳时）</option>
+                        <option value="10">10:00–10:59（巳时）</option>
+                        <option value="11" selected>11:00–11:59（午时）</option>
+                        <option value="12">12:00–12:59（午时）</option>
+                        <option value="13">13:00–13:59（未时）</option>
+                        <option value="14">14:00–14:59（未时）</option>
+                        <option value="15">15:00–15:59（申时）</option>
+                        <option value="16">16:00–16:59（申时）</option>
+                        <option value="17">17:00–17:59（酉时）</option>
+                        <option value="18">18:00–18:59（酉时）</option>
+                        <option value="19">19:00–19:59（戌时）</option>
+                        <option value="20">20:00–20:59（戌时）</option>
+                        <option value="21">21:00–21:59（亥时）</option>
+                        <option value="22">22:00–22:59（亥时）</option>
+                        <option value="23">23:00–23:59（子时）</option>
+                        {% else %}
+                        <option value="0">00:00 – 00:59</option>
+                        <option value="1">01:00 – 01:59</option>
+                        <option value="2">02:00 – 02:59</option>
+                        <option value="3">03:00 – 03:59</option>
+                        <option value="4">04:00 – 04:59</option>
+                        <option value="5">05:00 – 05:59</option>
+                        <option value="6">06:00 – 06:59</option>
+                        <option value="7">07:00 – 07:59</option>
+                        <option value="8">08:00 – 08:59</option>
+                        <option value="9">09:00 – 09:59</option>
+                        <option value="10">10:00 – 10:59</option>
+                        <option value="11" selected>11:00 – 11:59</option>
+                        <option value="12">12:00 – 12:59</option>
+                        <option value="13">13:00 – 13:59</option>
+                        <option value="14">14:00 – 14:59</option>
+                        <option value="15">15:00 – 15:59</option>
+                        <option value="16">16:00 – 16:59</option>
+                        <option value="17">17:00 – 17:59</option>
+                        <option value="18">18:00 – 18:59</option>
+                        <option value="19">19:00 – 19:59</option>
+                        <option value="20">20:00 – 20:59</option>
+                        <option value="21">21:00 – 21:59</option>
+                        <option value="22">22:00 – 22:59</option>
+                        <option value="23">23:00 – 23:59</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>{% if lang == 'zh' %}分{% else %}Min{% endif %}</label>
+                    <input type="number" name="minute" min="0" max="59" value="0" style="display:none;">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" style="flex:2">
+                    <label>{% if lang == 'zh' %}出生地（选填·用于真太阳时修正）{% else %}Birthplace (optional · for solar time){% endif %}</label>
+                    <div style="position:relative">
+                        <input type="text" name="city" id="cityInput" autocomplete="off"
+                               placeholder="{% if lang == 'zh' %}输入城市名，如：北京、Shanghai、New York{% else %}e.g. Beijing, Shanghai, New York{% endif %}">
+                        <div id="citySuggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#f5f0e8; border:1px solid rgba(139,69,19,0.2); max-height:200px; overflow-y:auto; z-index:100;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary" id="submitBtn">
+                {% if lang == 'zh' %}起 盘{% else %}REVEAL CHART{% endif %}
+            </button>
+        </form>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            {% if lang == 'zh' %}推演中……{% else %}Calculating your destiny…{% endif %}
+        </div>
+    </div>
+
+    <!-- Educational Content -->
+    {% if lang == 'zh' %}
+    <div class="card edu-section">
+        <h3>什么是八字？</h3>
+        <p style="font-size:0.85em; color:#8b7355; line-height:1.8; margin-bottom:20px;">
+            八字，又称四柱命理，是中国古老的命理学体系，已有千年历史。通过分析出生年、月、日、时的天干地支组合，揭示个人性格特征、人生走向和运势变化。
+        </p>
+        
+        <h3>四柱详解</h3>
+        <div class="edu-grid">
+            <div class="edu-item">
+                <div class="e-label">年柱</div>
+                <div class="e-title">Year Pillar</div>
+                <div class="e-desc">代表祖上、早年运势和社会关系，影响他人对你的第一印象。</div>
+            </div>
+            <div class="edu-item">
+                <div class="e-label">月柱</div>
+                <div class="e-title">Month Pillar</div>
+                <div class="e-desc">代表父母、事业潜力和性格基础，是命盘中的重要柱位。</div>
+            </div>
+            <div class="edu-item">
+                <div class="e-label">日柱</div>
+                <div class="e-title">Day Pillar</div>
+                <div class="e-desc">代表自我、性格核心和婚姻关系，是整个命盘的中心（日主）。</div>
+            </div>
+            <div class="edu-item">
+                <div class="e-label">时柱</div>
+                <div class="e-title">Hour Pillar</div>
+                <div class="e-desc">代表子女、创造力、晚年运势和人生成就。</div>
+            </div>
+        </div>
+
+        <h3 style="margin-top:24px;">五行</h3>
+        <div class="elements">
+            <span class="element-tag">🌳 木</span>
+            <span class="element-tag">🔥 火</span>
+            <span class="element-tag">🌍 土</span>
+            <span class="element-tag">⚔️ 金</span>
+            <span class="element-tag">💧 水</span>
+        </div>
+    </div>
+    {% else %}
+    <div class="card edu-section">
+        <h3>What is BaZi?</h3>
+        <p style="font-size:0.85em; color:#8b7355; line-height:1.8; margin-bottom:20px;">
+            BaZi (八字), also known as the Four Pillars of Destiny, is an ancient Chinese astrological system with over 1,000 years of history. By analyzing the Heavenly Stems and Earthly Branches of your birth year, month, day, and hour, it reveals personality traits, life patterns, and fortune cycles.
+        </p>
+        
+        <h3>The Four Pillars</h3>
+        <div class="edu-grid">
+            <div class="edu-item">
+                <div class="e-label">YEAR</div>
+                <div class="e-title">Year Pillar</div>
+                <div class="e-desc">Ancestry, early childhood, social influence. First impressions.</div>
+            </div>
+            <div class="edu-item">
+                <div class="e-label">MONTH</div>
+                <div class="e-title">Month Pillar</div>
+                <div class="e-desc">Parents, career potential, character foundation.</div>
+            </div>
+            <div class="edu-item">
+                <div class="e-label">DAY</div>
+                <div class="e-title">Day Pillar</div>
+                <div class="e-desc">Your true self, personality core, marriage. The center of the chart.</div>
+            </div>
+            <div class="edu-item">
+                <div class="e-label">HOUR</div>
+                <div class="e-title">Hour Pillar</div>
+                <div class="e-desc">Children, creativity, legacy, later years.</div>
+            </div>
+        </div>
+
+        <h3 style="margin-top:24px;">Five Elements</h3>
+        <div class="elements">
+            <span class="element-tag">🌳 Wood</span>
+            <span class="element-tag">🔥 Fire</span>
+            <span class="element-tag">🌍 Earth</span>
+            <span class="element-tag">⚔️ Metal</span>
+            <span class="element-tag">💧 Water</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        {% if lang == 'zh' %}
+        <div class="cn">道法自然 · 天人合一</div>
+        {% else %}
+        <div>The ancient art of Chinese astrology</div>
+        <div class="cn">道法自然 · 天人合一</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Floating compatibility button -->
+<div style="position:fixed;bottom:24px;right:24px;z-index:20;">
+    <a href="/compatibility?lang={{ lang }}" 
+       style="display:flex;align-items:center;gap:8px;background:#5c2e0e;color:#f5f0e8;
+              padding:12px 20px;text-decoration:none;letter-spacing:3px;font-size:0.85em;
+              box-shadow:0 2px 8px rgba(92,46,14,0.2);transition:all 0.2s;"
+       onmouseover="this.style.background='#7a3d14'"
+       onmouseout="this.style.background='#5c2e0e'">
+        {% if lang == 'zh' %}合婚配对{% else %}Compatibility{% endif %} →
+    </a>
+</div>
+</div>
+
+<script>
+document.getElementById('baziForm').addEventListener('submit', function() {
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '{% if lang == 'zh' %}推演中…{% else %}CALCULATING…{% endif %}';
+    document.getElementById('loading').style.display = 'block';
+});
+
+// City autocomplete
+var cityInput = document.getElementById('cityInput');
+var suggestions = document.getElementById('citySuggestions');
+var timer;
+
+cityInput.addEventListener('input', function() {
+    clearTimeout(timer);
+    var val = this.value.trim();
+    if (val.length < 1) { suggestions.style.display = 'none'; return; }
+    timer = setTimeout(function() {
+        fetch('/search_city?q=' + encodeURIComponent(val))
+            .then(r => r.json())
+            .then(data => {
+                if (data.length === 0) { suggestions.style.display = 'none'; return; }
+                suggestions.innerHTML = data.map(c => 
+                    '<div style="padding:8px 12px; cursor:pointer; border-bottom:1px solid rgba(139,69,19,0.06); font-size:0.85em;" ' +
+                    'onclick="selectCity(\'' + c.name + '\')">' +
+                    c.name + ', ' + c.country + ' <span style="color:#b8a88a;font-size:0.8em;">UTC' + (c.utc >= 0 ? '+' : '') + c.utc + '</span>' +
+                    '</div>'
+                ).join('');
+                suggestions.style.display = 'block';
+            });
+    }, 200);
+});
+
+cityInput.addEventListener('blur', function() {
+    setTimeout(function() { suggestions.style.display = 'none'; }, 200);
+});
+
+function selectCity(name) {
+    cityInput.value = name;
+    suggestions.style.display = 'none';
+}
+</script>
+</body>
+</html>

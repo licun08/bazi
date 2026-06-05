@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if lang == 'zh' %}合婚结果{% else %}Compatibility Result{% endif %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Georgia','Noto Serif SC','Times New Roman',serif; background:#f5f0e8; color:#2c2416;
+            background-image:radial-gradient(ellipse at 20% 50%, rgba(180,120,60,0.03) 0%, transparent 50%),radial-gradient(ellipse at 80% 50%, rgba(180,120,60,0.03) 0%, transparent 50%); }
+        .ink-top { position:fixed; top:0; left:0; width:100%; height:4px;
+            background:linear-gradient(90deg,transparent 0%,#8b4513 15%,#5c2e0e 50%,#8b4513 85%,transparent 100%); opacity:0.6; z-index:10; }
+        .container { max-width:820px; margin:0 auto; padding:40px 24px; }
+        .lang-switch { position:fixed; top:16px; right:24px; z-index:20; display:flex; border:1px solid rgba(139,69,19,0.15); background:rgba(255,252,245,0.9); }
+        .lang-switch a { padding:6px 14px; font-size:0.75em; letter-spacing:1px; text-decoration:none; color:#8b7355; }
+        .lang-switch a.active { color:#f5f0e8; background:#5c2e0e; }
+        .header { text-align:center; margin-bottom:32px; }
+        .seal { display:inline-block; width:44px; height:44px; border:2px solid #8b2500; color:#8b2500; font-size:16px; line-height:44px; text-align:center; transform:rotate(-3deg); margin-bottom:10px; opacity:0.75; }
+        .header h1 { font-size:1.6em; font-weight:400; color:#2c2416; letter-spacing:5px; }
+        .header .divider { width:50px; height:1px; background:linear-gradient(90deg,transparent,#8b4513,transparent); margin:10px auto; opacity:0.35; }
+
+        .verdict { text-align:center; padding:24px; margin-bottom:20px; border:1px solid rgba(139,69,19,0.12); background:rgba(255,252,245,0.85); position:relative; }
+        .verdict::before { content:''; position:absolute; top:6px; left:6px; right:6px; bottom:6px; border:1px solid rgba(139,69,19,0.06); pointer-events:none; }
+        .verdict .v-score { font-size:3em; color:#5c2e0e; letter-spacing:2px; }
+        .verdict .v-label { font-size:1.1em; color:#8b4513; letter-spacing:4px; margin-top:4px; }
+        .verdict .v-desc { font-size:0.85em; color:#8b7355; margin-top:8px; max-width:400px; margin-left:auto; margin-right:auto; }
+
+        .person-compare { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+        .person-card { border:1px solid rgba(139,69,19,0.1); padding:20px; background:rgba(255,252,245,0.85); position:relative; }
+        .person-card::before { content:''; position:absolute; top:6px; left:6px; right:6px; bottom:6px; border:1px solid rgba(139,69,19,0.05); pointer-events:none; }
+        .person-card h3 { font-size:0.7em; color:#8b7355; letter-spacing:3px; margin-bottom:6px; }
+        .person-card .dm { font-size:1.4em; color:#5c2e0e; letter-spacing:3px; }
+        .person-card .bazi { font-size:0.75em; color:#b8a88a; margin:4px 0; }
+        .person-card .zodiac { font-size:0.75em; color:#8b7355; }
+
+        .compat-details { margin-bottom:20px; }
+        .compat-item { display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid rgba(139,69,19,0.06); }
+        .compat-item:last-child { border-bottom:none; }
+        .compat-item .c-type { font-size:0.8em; color:#8b7355; }
+        .compat-item .c-name { font-size:0.85em; color:#2c2416; }
+        .compat-item .c-pillar { font-size:0.7em; color:#b8a88a; }
+        .compat-item .c-score { font-size:0.8em; }
+        .score-pos { color:#2d7a3a; }
+        .score-neg { color:#8b2020; }
+        .score-neutral { color:#8b7355; }
+
+        .reading-box { border:1px solid rgba(139,69,19,0.12); padding:28px; background:rgba(255,252,245,0.85); position:relative; margin-bottom:20px; }
+        .reading-box::before { content:''; position:absolute; top:6px; left:6px; right:6px; bottom:6px; border:1px solid rgba(139,69,19,0.05); pointer-events:none; }
+        .reading-box .rtitle { font-size:0.85em; font-weight:400; color:#5c2e0e; letter-spacing:4px; margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid rgba(139,69,19,0.1); }
+        .reading-body { font-size:1em; line-height:1.9; color:#3c3426; }
+        .reading-body h3 { font-size:0.9em; font-weight:400; color:#5c2e0e; margin-top:20px; margin-bottom:8px; letter-spacing:2px; }
+        .reading-body p { margin-bottom:10px; }
+        .reading-body strong { color:#5c2e0e; }
+
+        .back-link { display:block; text-align:center; color:#8b7355; text-decoration:none; font-size:0.85em; letter-spacing:2px; margin-top:20px; }
+        .back-link:hover { color:#5c2e0e; }
+        .footer { text-align:center; margin-top:40px; color:#b8a88a; font-size:0.65em; letter-spacing:2px; font-style:italic; }
+        @media (max-width:600px) { .person-compare { grid-template-columns:1fr; } .container { padding:28px 12px; } }
+    </style>
+</head>
+<body>
+<div class="ink-top"></div>
+<div class="lang-switch">
+    <a href="/compatibility?lang=zh" class="{% if lang == 'zh' %}active{% endif %}">中</a>
+    <a href="/compatibility?lang=en" class="{% if lang == 'en' %}active{% endif %}">EN</a>
+</div>
+<div class="container">
+    <div class="header">
+        <div class="seal">合</div>
+        <h1>{% if lang == 'zh' %}合 婚{% else %}Compatibility{% endif %}</h1>
+        <div class="divider"></div>
+    </div>
+
+    <!-- Verdict -->
+    <div class="verdict">
+        <div class="v-score">{{ compat.score }}</div>
+        <div class="v-label">{{ compat.verdict }}{% if lang == 'en' %} · {{ compat.verdict_en }}{% endif %}</div>
+        <div class="v-desc">{{ compat.verdict_desc }}</div>
+    </div>
+
+    <!-- Side-by-side charts -->
+    <div class="person-compare">
+        {% for person, bazi in [('1', bazi1), ('2', bazi2)] %}
+        <div class="person-card">
+            <h3>{% if lang == 'zh' %}第{{ person }}人{% else %}Person {{ person }}{% endif %} · {{ bazi.gender }}</h3>
+            <div class="dm">{{ bazi.day_master.stem }} ({{ bazi.day_master.element }})</div>
+            <div class="bazi">{{ bazi.baZi }}</div>
+            <div class="zodiac">{% if lang == 'zh' %}生肖{% else %}Zodiac{% endif %}: {{ bazi.year_animal }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Compatibility Details -->
+    <div class="reading-box">
+        <div class="rtitle">{% if lang == 'zh' %}合婚分析{% else %}Compatibility Details{% endif %}</div>
+        <div class="compat-details">
+            <div class="compat-item">
+                <span class="c-name">{% if lang == 'zh' %}生肖配对{% else %}Zodiac Match{% endif %}</span>
+                <span>{{ compat.zodiac.animal1 }} + {{ compat.zodiac.animal2 }}
+                    <span class="{% if compat.zodiac.score > 0 %}score-pos{% elif compat.zodiac.score < 0 %}score-neg{% else %}score-neutral{% endif %}">
+                        ({{ compat.zodiac.desc }})
+                    </span>
+                </span>
+            </div>
+            <div class="compat-item">
+                <span class="c-name">{% if lang == 'zh' %}日主关系{% else %}Day Master{% endif %}</span>
+                <span>{{ compat.day_master.dm1 }} + {{ compat.day_master.dm2 }}
+                    <span class="{% if compat.day_master.score > 0 %}score-pos{% elif compat.day_master.score < 0 %}score-neg{% else %}score-neutral{% endif %}">
+                        ({{ compat.day_master.desc }})
+                    </span>
+                </span>
+            </div>
+            {% for bc in compat.branches %}
+            <div class="compat-item">
+                <span>
+                    <span class="c-pillar">{{ bc.pillar }}</span>
+                    <span class="c-name"> {{ bc.name }}</span>
+                </span>
+                <span>
+                    <span class="c-type">{{ bc.desc }}</span>
+                    <span class="{% if bc.score > 0 %}score-pos{% elif bc.score < 0 %}score-neg{% else %}score-neutral{% endif %}">
+                        ({{ '%+d' | format(bc.score) }})
+                    </span>
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- AI Reading -->
+    <div class="reading-box">
+        <div class="rtitle">{% if lang == 'zh' %}综合解读{% else %}AI Analysis{% endif %}</div>
+        <div class="reading-body">
+            {% for line in reading.split('\n') %}
+                {% if line.startswith('## ') %}
+                    <h3>{{ line.replace('## ', '') }}</h3>
+                {% elif line.startswith('### ') %}
+                    <h4 style="font-size:0.85em;font-weight:400;color:#5c2e0e;margin-top:16px;margin-bottom:6px;letter-spacing:1px;">{{ line.replace('### ', '') }}</h4>
+                {% elif line.strip() %}
+                    <p>{{ line | safe }}</p>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <a href="/compatibility?lang={{ lang }}" class="back-link">{% if lang == 'zh' %}← 重新合婚{% else %}← New Comparison{% endif %}</a>
+    <div class="footer"><div style="font-style:normal;color:#c8b898;">道法自然 · 天人合一</div></div>
+</div>
+
+<!-- Floating buttons -->
+<div style="position:fixed;bottom:24px;right:24px;z-index:20;display:flex;gap:8px;">
+    <a href="/?lang={{ lang }}" 
+       style="display:flex;align-items:center;gap:6px;background:rgba(92,46,14,0.1);color:#5c2e0e;
+              padding:10px 16px;text-decoration:none;letter-spacing:2px;font-size:0.8em;
+              border:1px solid rgba(92,46,14,0.2);transition:all 0.2s;">
+        {% if lang == 'zh' %}命盘{% else %}Chart{% endif %}
+    </a>
+    <a href="/compatibility?lang={{ lang }}" 
+       style="display:flex;align-items:center;gap:6px;background:#5c2e0e;color:#f5f0e8;
+              padding:10px 16px;text-decoration:none;letter-spacing:3px;font-size:0.8em;
+              box-shadow:0 2px 8px rgba(92,46,14,0.15);transition:all 0.2s;"
+       onmouseover="this.style.background='#7a3d14'" onmouseout="this.style.background='#5c2e0e'">
+        {% if lang == 'zh' %}合婚{% else %}Compatibility{% endif %} →
+    </a>
+</div>
+</body>
+</html>
