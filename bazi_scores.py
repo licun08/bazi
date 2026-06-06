@@ -284,15 +284,6 @@ def generate_hex_svg(scores, lang='zh', size=300):
         (-0.866, 0.5), # lower-left
         (-0.866, -0.5),# upper-left
     ]
-    # Perpendicular offset directions (30° CW from each axis)
-    perp = [
-        (0.5, 0.866),    # top → right-offset
-        (-0.5, 0.866),   # upper-right → upper
-        (-1, 0),         # lower-right → left
-        (-0.5, -0.866),  # bottom → left-offset
-        (0.5, -0.866),   # lower-left → lower
-        (1, 0),          # upper-left → right
-    ]
     cx = cy = size // 2
     r_max = size * 0.40
 
@@ -311,18 +302,13 @@ def generate_hex_svg(scores, lang='zh', size=300):
     score_pts = ' '.join(vertex(dim_values[i] / 100, i) for i in range(6))
     score_poly = f'<polygon points="{score_pts}" fill="rgba(139,69,19,0.25)" stroke="#5c2e0e" stroke-width="2" stroke-linejoin="round"/>'
 
-    # Score labels: offset perpendicular to axis so they don't overlap labels
+    # Data points at vertices
     pts_html = ''
-    labels_html = ''
     for i in range(6):
         ratio = dim_values[i] / 100
         x = cx + r_max * ratio * axes[i][0]
         y = cy + r_max * ratio * axes[i][1]
         pts_html += f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="#5c2e0e"/>'
-        # Score value offset perpendicular to axis, slightly past the data point
-        sx = x + 16 * perp[i][0]
-        sy = y + 16 * perp[i][1]
-        labels_html += f'<text x="{sx:.1f}" y="{sy:.1f}" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#5c2e0e" font-weight="bold" font-family="Georgia,serif">{dim_values[i]}</text>'
 
     # Axis names: far outside, with the label itself
     lo = size * 0.60
@@ -342,7 +328,6 @@ def generate_hex_svg(scores, lang='zh', size=300):
   <circle cx="{cx}" cy="{cy}" r="2" fill="#5c2e0e" opacity="0.3"/>
   {score_poly}
   {pts_html}
-  {labels_html}
   {axis_labels}
   {center}
 </svg>'''
