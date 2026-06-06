@@ -24,7 +24,7 @@ app = Flask(__name__,
 engine = BaZiEngine()
 
 def get_lang():
-    return request.args.get('lang', 'zh')
+    return request.args.get('lang', 'en')
 
 def markdown_to_html(text: str) -> str:
     """Convert simple markdown formatting to HTML tags."""
@@ -54,7 +54,7 @@ def city_search():
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
-    lang = request.form.get('lang', 'zh')
+    lang = request.form.get('lang', 'en')
     try:
         year = int(request.form['year'])
         month = int(request.form['month'])
@@ -119,7 +119,7 @@ def api_reading():
         day = int(data['day'])
         hour = int(data.get('hour', 12))
         minute = int(data.get('minute', 0))
-        lang = data.get('lang', 'zh')
+        lang = data.get('lang', 'en')
         city = data.get('city', '')
         
         dt = datetime(year, month, day, hour, minute)
