@@ -222,6 +222,15 @@
             color: #b8a88a; font-size: 0.7em; letter-spacing: 2px;
             font-style: italic; }
         .footer .cn { font-style: normal; color: #c8b898; margin-top: 4px; }
+        .donation { text-align: center; margin-top: 40px; padding: 24px 0;
+            border-top: 1px solid rgba(139, 69, 19, 0.08); }
+        .donation-text { font-size: 0.8em; color: #8b7355; line-height: 1.8;
+            margin-bottom: 12px; font-style: italic; }
+        .donation-btn { display: inline-block; padding: 10px 24px;
+            background: #5c2e0e; color: #f5f0e8; text-decoration: none;
+            letter-spacing: 2px; font-size: 0.82em;
+            transition: background 0.2s; }
+        .donation-btn:hover { background: #7a3d14; }
 
         @media (max-width: 600px) {
             .container { padding: 32px 16px; }
@@ -460,6 +469,16 @@
         </div>
     </div>
     {% endif %}
+
+    <div class="donation">
+        {% if lang == 'zh' %}
+        <p class="donation-text">本工具永久免费。如果觉得有用，可以请我喝杯咖啡，支持服务器和 API 开销 ☕</p>
+        <a href="https://ko-fi.com/printsprofits" target="_blank" class="donation-btn">☕ 请我喝咖啡</a>
+        {% else %}
+        <p class="donation-text">This tool is free and will always be free. If you find value in it, consider buying me a coffee to help cover API costs. ☕</p>
+        <a href="https://ko-fi.com/printsprofits" target="_blank" class="donation-btn">☕ Buy me a coffee</a>
+        {% endif %}
+    </div>
 
     <div class="footer">
         {% if lang == 'zh' %}
