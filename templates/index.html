@@ -3,7 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if lang == 'zh' %}八字命理{% else %}BaZi · Four Pillars{% endif %}</title>
+    <title>{% if lang == 'zh' %}八字命理{% else %}Free BaZi Calculator · Four Pillars of Destiny{% endif %}</title>
+    <meta name="description" content="{% if lang == 'zh' %}免费在线八字排盘，AI 智能解读您的命运密码{% else %}Free online BaZi (Four Pillars of Destiny) calculator with AI-powered reading. Generate your Chinese astrology birth chart instantly.{% endif %}">
+    <meta name="keywords" content="{% if lang == 'zh' %}八字,批八字,四柱命理,免费算命,生辰八字{% else %}BaZi calculator, Four Pillars of Destiny, Chinese astrology, free BaZi reading, Chinese zodiac, birth chart{% endif %}">
+    <meta property="og:title" content="{% if lang == 'zh' %}八字命理 · AI 智能排盘{% else %}Free BaZi Calculator · Four Pillars of Destiny{% endif %}">
+    <meta property="og:description" content="{% if lang == 'zh' %}免费在线八字排盘，AI 智能解读{% else %}Free online BaZi calculator with AI-powered reading. Discover your destiny.{% endif %}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bzmli.com">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://bzmli.com">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VY7BDTGZWP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-VY7BDTGZWP');
+    </script>
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "BaZi Calculator",
+      "url": "https://bzmli.com",
+      "description": "Free online BaZi (Four Pillars of Destiny) calculator with AI-powered interpretation",
+      "applicationCategory": "Astrology",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {

@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if lang == 'zh' %}合婚结果{% else %}Compatibility Result{% endif %}</title>
+    <title>{% if lang == 'zh' %}合婚结果{% else %}BaZi Compatibility Result{% endif %}</title>
+    <meta name="description" content="{% if lang == 'zh' %}八字合婚分析结果{% else %}BaZi compatibility analysis result for two Chinese astrology charts.{% endif %}">
+    <meta name="robots" content="noindex">
+    <link rel="canonical" href="https://bzmli.com/compatibility">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VY7BDTGZWP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-VY7BDTGZWP');
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }

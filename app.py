@@ -201,6 +201,32 @@ def compatibility():
                              api_configured=is_configured())
 
 
+@app.route('/robots.txt')
+def robots():
+    return '''User-agent: *
+Allow: /
+Sitemap: https://bzmli.com/sitemap.xml
+''', 200, {'Content-Type': 'text/plain'}
+
+
+@app.route('/sitemap.xml')
+def sitemap():
+    return '''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://bzmli.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://bzmli.com/compatibility</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>
+''', 200, {'Content-Type': 'application/xml'}
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8899))
     print(f"✨ BaZi AI running at http://127.0.0.1:{port}")
