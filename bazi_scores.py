@@ -128,7 +128,7 @@ def compute_scores(bazi_data, lang='zh'):
     day_branch = branches[2]
 
     # ── 1. 魅力 / Charisma ──
-    cha = 40
+    cha = 50
     if has_eating: cha += 16
     if has_hurting: cha += 10
     cha += peach_count * 18
@@ -138,7 +138,7 @@ def compute_scores(bazi_data, lang='zh'):
     cha = _cap(cha)
 
     # ── 2. 财运 / Wealth ──
-    wea = 40
+    wea = 48
     if has_zheng_cai: wea += 20
     if has_pian_cai: wea += 15
     if wealth_count >= 2: wea += 10
@@ -151,7 +151,7 @@ def compute_scores(bazi_data, lang='zh'):
     wea = _cap(wea)
 
     # ── 3. 事业 / Career ──
-    car = 40
+    car = 48
     if has_zheng_guan: car += 15
     if has_pian_guan: car += 12
     if has_7kill and has_seal: car += 22
@@ -164,7 +164,7 @@ def compute_scores(bazi_data, lang='zh'):
     car = _cap(car)
 
     # ── 4. 婚姻 / Marriage ──
-    mar = 45
+    mar = 52
     gender = bazi_data.get('gender', 'male')
     if gender == 'male':
         if has_zheng_cai: mar += 20
@@ -185,7 +185,7 @@ def compute_scores(bazi_data, lang='zh'):
     mar = _cap(mar, lo=5, hi=98)
 
     # ── 5. 健康 / Health ──
-    hea = 40
+    hea = 50
     hea += unique_els * 4
     if max(el_counts) >= 4: hea -= 15
     elif max(el_counts) >= 3: hea -= 5
@@ -205,7 +205,7 @@ def compute_scores(bazi_data, lang='zh'):
     hea = _cap(hea)
 
     # ── 6. 才华 / Talent ──
-    tal = 40
+    tal = 50
     # 食神 = 创造力、表达能力
     if has_eating: tal += 20
     # 伤官 = 才华、聪明
