@@ -70,7 +70,10 @@
         @media (max-width:600px) { .person-compare { grid-template-columns:1fr; } .container { padding:28px 12px; } }
     </style>
     <!-- Vercel Web Analytics -->
-    <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+    <script>
+      window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 <div class="ink-top"></div>
