@@ -4,7 +4,7 @@ Flask web application with DeepSeek-powered readings.
 """
 import os
 import sys
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from datetime import datetime
 
 # ── Fix paths for Vercel serverless ──
@@ -63,11 +63,21 @@ def calculate():
         minute = int(request.form.get('minute', 0))
         gender = request.form.get('gender', 'male')
         city = request.form.get('city', '').strip()
-        
-        # Original clock time
+        return redirect(url_for('reading_page', year=year, month=month, day=day,
+                                hour=hour, minute=minute, gender=gender, lang=lang, city=city))
+    except Exception as e:
+        return render_template('index.html',
+                             error=f"Error: {str(e)}",
+                             lang=lang,
+                             api_configured=is_configured())
+
+
+@app.route('/reading/<int:year>/<int:month>/<int:day>/<int:hour>/<int:minute>/<gender>')
+def reading_page(year, month, day, hour, minute, gender):
+    lang = request.args.get('lang', 'en')
+    city = request.args.get('city', '').strip()
+    try:
         dt = datetime(year, month, day, hour, minute)
-        
-        # True solar time correction
         adjusted_dt = dt
         solar_info = None
         if city:
@@ -75,20 +85,14 @@ def calculate():
             if adj['city_found']:
                 adjusted_dt = datetime(year, month, day, adj['adjusted_hour'], adj['adjusted_minute'])
                 solar_info = adj['correction']
-        
-        # Calculate BaZi using ADJUSTED time
         result = engine.calculate(adjusted_dt)
         formatted = engine.get_formatted_pillars(result)
         bazi_data = format_result_for_api(result, formatted, dt)
         bazi_data['gender'] = gender
-        
         reading = get_reading(bazi_data, lang=lang)
         reading_html = markdown_to_html(reading)
-
-        # Compute entertainment scores
         scores = compute_scores(bazi_data, lang=lang)
         hex_svg = generate_hex_svg(scores, lang=lang)
-
         return render_template('result.html',
                              bazi=bazi_data,
                              reading=reading_html,
@@ -98,14 +102,8 @@ def calculate():
                              solar_info=solar_info,
                              city=city,
                              api_configured=is_configured())
-        
-    except ValueError as e:
-        return render_template('index.html', 
-                             error=f"Invalid date/time: {str(e)}",
-                             lang=lang,
-                             api_configured=is_configured())
     except Exception as e:
-        return render_template('index.html', 
+        return render_template('index.html',
                              error=f"Error: {str(e)}",
                              lang=lang,
                              api_configured=is_configured())
