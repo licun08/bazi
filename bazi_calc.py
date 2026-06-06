@@ -271,7 +271,7 @@ class BaZiEngine:
             current_branch = 1  # 丑
         
         # Calculate month stem using 五虎遁
-        month_stem = (WU_HU_DUN[year_stem] + (current_branch - 2)) % 10
+        month_stem = (WU_HU_DUN[year_stem] + (current_branch - 2) % 12) % 10
         
         return (month_stem, current_branch)
 
