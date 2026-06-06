@@ -210,18 +210,11 @@ class BaZiEngine:
         """Calculate month pillar (月柱).
         Based on solar terms (节气)."""
         year = dt.year
-        month = dt.month
-        day = dt.day
-        
-        # Get all solar term dates for this year (and next for 小寒)
+        # Get solar terms for current, next, and previous year
         terms = self._get_solar_term_dates(year)
-        # Also get 小寒 of next year for comparison
         terms_next = self._get_solar_term_dates(year + 1)
+        terms_prev = self._get_solar_term_dates(year - 1)
         
-        # Solar term order (the 12 节):
-        # 立春(Feb 4) -> branch 寅(2)
-        # 惊蛰(Mar 6) -> branch 卯(3)
-        # ...
         term_branches = {
             '立春': 2,  # 寅
             '惊蛰': 3,  # 卯
@@ -234,25 +227,30 @@ class BaZiEngine:
             '寒露': 10, # 戌
             '立冬': 11, # 亥
             '大雪': 0,  # 子
-            '小寒': 1,  # 丑 (from next year's terms for Dec/Jan)
+            '小寒': 1,  # 丑
         }
         
-        # Determine current solar term month
-        term_order = ['立春', '惊蛰', '清明', '立夏', '芒种', '小暑',
-                       '立秋', '白露', '寒露', '立冬', '大雪', '小寒']
-        
-        # Get all term dates in chronological order for this period
+        # Build chronological term list including cross-year terms
         term_dates = []
-        for t in term_order:
-            if t == '小寒':
-                # 小寒 is in next year
-                d = terms_next.get(t)
-            else:
-                d = terms.get(t)
+        # Previous year's 大雪 (Dec ~ Jan, belongs to current solar month 子)
+        if '大雪' in terms_prev:
+            term_dates.append(('大雪', terms_prev['大雪']))
+        # Previous year's 小寒 (Jan ~ Feb, belongs to current solar month 丑)
+        if '小寒' in terms_prev:
+            term_dates.append(('小寒', terms_prev['小寒']))
+        # Current year's 小寒 (next year's Jan ~ Feb, for checking Dec dates)
+        if '小寒' in terms:
+            term_dates.append(('小寒', terms['小寒']))
+        # Current year's terms (立春 to 大雪)
+        for t in ['立春', '惊蛰', '清明', '立夏', '芒种', '小暑',
+                   '立秋', '白露', '寒露', '立冬', '大雪']:
+            d = terms.get(t)
             if d:
                 term_dates.append((t, d))
+        # Next year's 小寒 (Dec of current year ~ Jan of next year)
+        if '小寒' in terms_next:
+            term_dates.append(('小寒', terms_next['小寒']))
         
-        # Sort by date
         term_dates.sort(key=lambda x: x[1])
         
         # Find which solar term month we're in
