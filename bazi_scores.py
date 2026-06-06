@@ -185,8 +185,8 @@ def compute_scores(bazi_data, lang='zh'):
     mar = _cap(mar, lo=5, hi=98)
 
     # ── 5. 健康 / Health ──
-    hea = 55
-    hea += unique_els * 6
+    hea = 40
+    hea += unique_els * 4
     if max(el_counts) >= 4: hea -= 15
     elif max(el_counts) >= 3: hea -= 5
     chong_count = 0
