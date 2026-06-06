@@ -285,7 +285,7 @@ def generate_hex_svg(scores, lang='zh', size=300):
         (-0.866, -0.5),# upper-left
     ]
     cx = cy = size // 2
-    r_max = size * 0.40
+    r_max = size * 0.35
 
     def vertex(ratio, i):
         return f"{cx + r_max * ratio * axes[i][0]:.1f},{cy + r_max * ratio * axes[i][1]:.1f}"
@@ -311,7 +311,7 @@ def generate_hex_svg(scores, lang='zh', size=300):
         pts_html += f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="#5c2e0e"/>'
 
     # Axis names: far outside, with the label itself
-    lo = size * 0.60
+    lo = size * 0.44
     axis_labels = ''
     for i in range(6):
         lx = cx + lo * axes[i][0]
