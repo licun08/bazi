@@ -284,6 +284,15 @@ def generate_hex_svg(scores, lang='zh', size=300):
         (-0.866, 0.5), # lower-left
         (-0.866, -0.5),# upper-left
     ]
+    # Perpendicular offset directions (30° CW from each axis)
+    perp = [
+        (0.5, 0.866),    # top → right-offset
+        (-0.5, 0.866),   # upper-right → upper
+        (-1, 0),         # lower-right → left
+        (-0.5, -0.866),  # bottom → left-offset
+        (0.5, -0.866),   # lower-left → lower
+        (1, 0),          # upper-left → right
+    ]
     cx = cy = size // 2
     r_max = size * 0.40
 
@@ -302,25 +311,30 @@ def generate_hex_svg(scores, lang='zh', size=300):
     score_pts = ' '.join(vertex(dim_values[i] / 100, i) for i in range(6))
     score_poly = f'<polygon points="{score_pts}" fill="rgba(139,69,19,0.25)" stroke="#5c2e0e" stroke-width="2" stroke-linejoin="round"/>'
 
+    # Score labels: offset perpendicular to axis so they don't overlap labels
     pts_html = ''
     labels_html = ''
     for i in range(6):
-        x = cx + r_max * (dim_values[i] / 100) * axes[i][0]
-        y = cy + r_max * (dim_values[i] / 100) * axes[i][1]
+        ratio = dim_values[i] / 100
+        x = cx + r_max * ratio * axes[i][0]
+        y = cy + r_max * ratio * axes[i][1]
         pts_html += f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="#5c2e0e"/>'
-        off = 1.18 if dim_values[i] > 60 else 1.35
-        labels_html += f'<text x="{cx + r_max * off * axes[i][0]:.1f}" y="{cy + r_max * off * axes[i][1]:.1f}" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#5c2e0e" font-weight="bold" font-family="Georgia,serif">{dim_values[i]}</text>'
+        # Score value offset perpendicular to axis, slightly past the data point
+        sx = x + 16 * perp[i][0]
+        sy = y + 16 * perp[i][1]
+        labels_html += f'<text x="{sx:.1f}" y="{sy:.1f}" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#5c2e0e" font-weight="bold" font-family="Georgia,serif">{dim_values[i]}</text>'
 
-    lo = size * 0.48
+    # Axis names: far outside, with the label itself
+    lo = size * 0.60
     axis_labels = ''
     for i in range(6):
         lx = cx + lo * axes[i][0]
         ly = cy + lo * axes[i][1]
-        axis_labels += f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#8b7355" font-family="Georgia,serif">{dim_names[i]}</text>'
+        axis_labels += f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#8b7355" font-family="Georgia,serif" font-weight="bold">{dim_names[i]}</text>'
 
     cc = scores['composite']
-    center = f'<text x="{cx}" y="{cy - 8}" text-anchor="middle" font-size="24" fill="#5c2e0e" font-weight="bold" font-family="Georgia,serif">{cc}</text>' \
-             f'<text x="{cx}" y="{cy + 14}" text-anchor="middle" font-size="9" fill="#b8a88a" font-family="Georgia,serif">/100</text>'
+    center = f'<text x="{cx}" y="{cy - 8}" text-anchor="middle" font-size="26" fill="#5c2e0e" font-weight="bold" font-family="Georgia,serif">{cc}</text>' \
+             f'<text x="{cx}" y="{cy + 14}" text-anchor="middle" font-size="10" fill="#b8a88a" font-family="Georgia,serif">/100</text>'
 
     return f'''<svg viewBox="0 0 {size} {size}" width="{size}" height="{size}" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;">
   {bg}

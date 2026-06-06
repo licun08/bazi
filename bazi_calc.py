@@ -86,84 +86,48 @@ class BaZiEngine:
     """Main engine for calculating BaZi / Four Pillars."""
 
     def _get_solar_term_dates(self, year: int) -> dict:
-        """Calculate exact solar term dates for a given year using ephem."""
+        """Calculate exact solar term dates using sun ecliptic longitude (pure Python)."""
         terms = {}
         for i, term_name in enumerate(SOLAR_TERMS):
-            # ephem uses different naming
-            # Chinese solar terms in ephem: use next_solstice/equinox or next_opposition
-            # Actually, let me compute using the sun's longitude
-            # Each term is when sun reaches (i * 30) degrees from 春分
-            # 立春 is at 315° sun longitude
-            
-            # Actually, let me use a simpler approach with ephem
-            # Find when the sun crosses specific longitudes
-            
-            # Sun longitude for each solar term (starting from 立春=315°)
             target_longitude = (315 + i * 30) % 360
-            
-            # Search for the date when the sun reaches this longitude
-            # Start from the approximate date
-            approx_month = {0: 2, 1: 3, 2: 4, 3: 5, 4: 6, 5: 7, 
+            approx_month = {0: 2, 1: 3, 2: 4, 3: 5, 4: 6, 5: 7,
                             6: 8, 7: 9, 8: 10, 9: 11, 10: 12, 11: 1}
             approx_day = {0: 4, 1: 6, 2: 5, 3: 5, 4: 6, 5: 7,
                           6: 7, 7: 8, 8: 8, 9: 7, 10: 7, 11: 6}
-            
-            # Handle year wrap for 小寒 (month=1 of next year)
             search_year = year if i < 11 else year + 1
-            if i == 11:  # 小寒 is in January of next year
-                search_year = year + 1
-            
             try:
-                # Find exact date using binary search
                 start = datetime(search_year, approx_month[i], approx_day[i]) - timedelta(days=5)
                 end = start + timedelta(days=15)
-                
-                target_date = self._find_sun_longitude_date(
-                    target_longitude, start, end
-                )
-                terms[term_name] = target_date.date()
-            except Exception as e:
-                # Fallback: use approximate date
+                target_date = self._find_sun_longitude_date(target_longitude, start, end)
+                terms[term_name] = target_date
+            except Exception:
                 fallback = datetime(search_year, approx_month[i], approx_day[i])
-                terms[term_name] = fallback.date()
-                
+                terms[term_name] = fallback
         return terms
 
     def _find_sun_longitude_date(self, target_lon: float, start: datetime, end: datetime) -> datetime:
         """Find exact date when sun crosses target longitude using binary search."""
-        obs = ephem.Observer()
-        obs.lat = '0'
-        obs.lon = '0'
-        
-        sun = ephem.Sun()
-        
+        from math import sin, cos, atan2, radians, degrees
+
+        def sun_lon(dt):
+            jd = dt.timestamp() / 86400 + 2440587.5
+            n = jd - 2451545.0
+            L = (280.46646 + 0.98564736 * n) % 360
+            g = (357.52816 + 0.98560028 * n) % 360
+            lam = L + 1.9146 * sin(radians(g)) + 0.02 * sin(radians(2 * g)) + 0.0003 * sin(radians(3 * g))
+            return lam % 360
+
         mid = start
-        for _ in range(30):  # binary search for precision
+        for _ in range(30):
             mid = start + (end - start) / 2
-            obs.date = mid.strftime('%Y/%m/%d %H:%M:%S')
-            sun.compute(obs)
-            lon = float(sun.ra) * 180 / 12  # Convert RA to degrees
-            # Actually, for solar terms we need ecliptic longitude
-            # Let me use a simpler method
-            lon = float(sun.ra) * 15  # hours -> degrees
-            # Actually we want ecliptic longitude, not RA
-            # Simple approximation: use ecliptic coordinates
-            lon_ecl = self._sun_ecliptic_longitude(mid)
-            
-            if abs(lon_ecl - target_lon) < 0.01 or abs(lon_ecl - target_lon) > 359.99:
+            lon = sun_lon(mid)
+            if abs(lon - target_lon) < 0.01 or abs(lon - target_lon) > 359.99:
                 return mid
-            
-            if lon_ecl < target_lon:
-                if abs(lon_ecl - target_lon) < 180:
-                    start = mid
-                else:
-                    end = mid
+            diff = (lon - target_lon + 540) % 360 - 180  # normalize to [-180, 180]
+            if diff < 0:
+                start = mid
             else:
-                if abs(lon_ecl - target_lon) < 180:
-                    end = mid
-                else:
-                    start = mid
-        
+                end = mid
         return mid
 
     def _sun_ecliptic_longitude(self, dt: datetime) -> float:
@@ -230,13 +194,11 @@ class BaZiEngine:
         
         # Get 立春 date for this year
         try:
-            terms = self._get_solar_terms_simple(year)
+            terms = self._get_solar_term_dates(year)
             lichun = terms['立春']
         except:
-            lichun = date(year, 2, 4)
-        
-        # If before 立春, use previous year's stem-branch
-        if dt.date() < lichun:
+            lichun = datetime(year, 2, 4, 12, 0)
+        if dt < lichun:
             year = year - 1
         
         stem = (year - 4) % 10
@@ -252,9 +214,9 @@ class BaZiEngine:
         day = dt.day
         
         # Get all solar term dates for this year (and next for 小寒)
-        terms = self._get_solar_terms_simple(year)
+        terms = self._get_solar_term_dates(year)
         # Also get 小寒 of next year for comparison
-        terms_next = self._get_solar_terms_simple(year + 1)
+        terms_next = self._get_solar_term_dates(year + 1)
         
         # Solar term order (the 12 节):
         # 立春(Feb 4) -> branch 寅(2)
@@ -298,7 +260,7 @@ class BaZiEngine:
         current_branch = 2  # Default: 寅 (Spring)
         
         for i, (t, d) in enumerate(term_dates):
-            if dt.date() < d:
+            if dt < d:
                 # We're in the previous term's month
                 if i == 0:
                     # Before 立春 - should be in 丑 month (小寒 to 立春)
