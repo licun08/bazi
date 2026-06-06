@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Five Elements · Wood, Fire, Earth, Metal, Water Personality Guide</title>
+    <meta name="description" content="Discover your Chinese Five Elements personality type. Wood, Fire, Earth, Metal, or Water — which one are you? Free BaZi chart reveals your element profile.">
+    <meta name="keywords" content="Chinese five elements, Wu Xing, five elements personality, Wood Fire Earth Metal Water, Chinese astrology elements, element personality test">
+    <meta property="og:title" content="Chinese Five Elements Personality Guide">
+    <meta property="og:description" content="Wood, Fire, Earth, Metal, or Water? Learn what each element means and find yours in your BaZi chart.">
+    <meta property="og:url" content="https://www.bzmli.com/five-elements">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.bzmli.com/five-elements">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VY7BDTGZWP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-VY7BDTGZWP');
+    </script>
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4831991295082888" crossorigin="anonymous"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: #f5f0e8;
+            color: #2c2416;
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(180, 120, 60, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 50%, rgba(180, 120, 60, 0.03) 0%, transparent 50%);
+        }
+        .ink-top { position: fixed; top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, transparent 0%, #8b4513 15%, #5c2e0e 50%, #8b4513 85%, transparent 100%); opacity: 0.6; z-index: 10; }
+        .container { max-width: 780px; margin: 0 auto; padding: 40px 24px; position: relative; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 {
+            font-size: 2em; font-weight: 400;
+            color: #2c2416; letter-spacing: 3px;
+            margin-bottom: 8px;
+        }
+        .header .subtitle {
+            font-style: italic; color: #8b7355; font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+        .header .divider {
+            width: 60px; height: 1px;
+            background: linear-gradient(90deg, transparent, #8b4513, transparent);
+            margin: 16px auto; opacity: 0.4;
+        }
+        .card {
+            background: rgba(255, 252, 245, 0.85);
+            border: 1px solid rgba(139, 69, 19, 0.12);
+            padding: 32px; margin-bottom: 24px;
+        }
+        .card h2 {
+            font-size: 1.3em; font-weight: 400;
+            color: #5c2e0e; letter-spacing: 2px;
+            margin-bottom: 16px; padding-bottom: 10px;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.1);
+        }
+        .card h3 {
+            font-size: 1.05em; font-weight: 400;
+            color: #5c2e0e; margin: 20px 0 8px;
+        }
+        .card p {
+            font-size: 0.9em; color: #4a3a28; line-height: 1.8;
+            margin-bottom: 12px;
+        }
+        .card ul { padding-left: 20px; margin-bottom: 12px; }
+        .card li {
+            font-size: 0.88em; color: #4a3a28; line-height: 1.7;
+            margin-bottom: 6px;
+        }
+        .card strong { color: #5c2e0e; }
+        .card em { color: #8b7355; }
+        .element-card {
+            padding: 24px; margin-bottom: 16px;
+            border-left: 4px solid;
+        }
+        .element-card h3 { margin-top: 0; letter-spacing: 2px; }
+        .element-card .tag {
+            display: inline-block; padding: 3px 10px;
+            font-size: 0.72em; letter-spacing: 1px;
+            margin-bottom: 10px; color: #f5f0e8;
+        }
+        .element-card.wood { border-color: #5c8a4a; background: rgba(92, 138, 74, 0.05); }
+        .element-card.wood .tag { background: #5c8a4a; }
+        .element-card.fire { border-color: #c04040; background: rgba(192, 64, 64, 0.05); }
+        .element-card.fire .tag { background: #c04040; }
+        .element-card.earth { border-color: #b8963a; background: rgba(184, 150, 58, 0.05); }
+        .element-card.earth .tag { background: #b8963a; }
+        .element-card.metal { border-color: #7a7a7a; background: rgba(180, 180, 190, 0.08); }
+        .element-card.metal .tag { background: #7a7a7a; }
+        .element-card.water { border-color: #3a7a9a; background: rgba(58, 122, 154, 0.05); }
+        .element-card.water .tag { background: #3a7a9a; }
+        .cycle-box {
+            text-align: center; padding: 20px;
+            background: rgba(255, 252, 245, 0.6);
+            border: 1px solid rgba(139, 69, 19, 0.1);
+            margin: 16px 0;
+        }
+        .cycle-box p { font-size: 0.85em; margin-bottom: 6px; }
+        .cycle-arrow { color: #8b7355; font-size: 1.2em; letter-spacing: 8px; }
+        .cta-box {
+            text-align: center; padding: 24px;
+            background: rgba(92, 46, 14, 0.04);
+            border: 1px solid rgba(139, 69, 19, 0.12);
+            margin-top: 24px;
+        }
+        .cta-box p { font-size: 0.9em; font-style: italic; color: #8b7355; margin-bottom: 14px; }
+        .cta-btn {
+            display: inline-block; padding: 12px 32px;
+            background: #5c2e0e; color: #f5f0e8;
+            text-decoration: none; letter-spacing: 3px; font-size: 0.9em;
+            transition: background 0.2s;
+        }
+        .cta-btn:hover { background: #7a3d14; }
+        .footer { text-align: center; margin-top: 40px;
+            color: #b8a88a; font-size: 0.7em; letter-spacing: 2px;
+            font-style: italic; }
+        .footer a { color: #8b7355; text-decoration: none; }
+        .footer a:hover { color: #5c2e0e; }
+        @media (max-width: 600px) {
+            .container { padding: 32px 16px; }
+            .card { padding: 20px; }
+            .element-card { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="ink-top"></div>
+
+<div class="container">
+    <div class="header">
+        <h1>The Five Elements of Chinese Astrology</h1>
+        <div class="subtitle">Wood · Fire · Earth · Metal · Water — the building blocks of your destiny</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="card">
+        <h2>What Are the Five Elements?</h2>
+        <p>In Chinese philosophy, <strong>Wu Xing (五行)</strong> — the Five Elements — are not physical substances but <strong>energetic forces</strong> that describe all phenomena. Everything in the universe — seasons, colors, organs, emotions, personalities — can be understood through these five energies.</p>
+        <p>Your <strong>BaZi chart</strong> reveals which elements are strong or weak in your birth energy. Your <strong>Day Master</strong> (the Heavenly Stem of your Day Pillar) is your core element. Think of it as your "element sign" — like the Chinese equivalent of a sun sign, but deeper.</p>
+
+        <div class="cycle-box">
+            <p><strong>The Creative Cycle (相生)</strong></p>
+            <p class="cycle-arrow">🌳 Wood → 🔥 Fire → 🌍 Earth → ⚔️ Metal → 💧 Water → 🌳 Wood</p>
+            <p style="margin-top:10px;"><strong>The Destructive Cycle (相克)</strong></p>
+            <p class="cycle-arrow">🌳 Wood → 🌍 Earth → 💧 Water → 🔥 Fire → ⚔️ Metal → 🌳 Wood</p>
+        </div>
+    </div>
+
+    <div class="element-card wood">
+        <span class="tag">🌳 WOOD · 木</span>
+        <h3>The Pioneer · Spring Energy</h3>
+        <p><strong>Keywords:</strong> Growth, expansion, creativity, idealism, ambition</p>
+        <p><strong>Direction:</strong> East | <strong>Season:</strong> Spring | <strong>Color:</strong> Green | <strong>Planet:</strong> Jupiter</p>
+        <p>Wood personalities are natural <strong>visionaries</strong>. They see possibilities everywhere and have an unstoppable drive to grow, create, and explore. Like a tree, they push upward toward the light — but their roots run deep too.</p>
+        <p><strong>Strengths:</strong> Generous, idealistic, creative, courageous, morally driven</p>
+        <p><strong>Challenges:</strong> Can be impatient, stubborn, overextend themselves, or become angry when blocked</p>
+        <p><strong>Famous Wood types:</strong> Visionary leaders, artists, entrepreneurs who push boundaries</p>
+        <p><em>If Wood is your Day Master, you have the soul of a pioneer. You need a mission.</em></p>
+    </div>
+
+    <div class="element-card fire">
+        <span class="tag">🔥 FIRE · 火</span>
+        <h3>The Radiant · Summer Energy</h3>
+        <p><strong>Keywords:</strong> Passion, charisma, visibility, transformation, joy</p>
+        <p><strong>Direction:</strong> South | <strong>Season:</strong> Summer | <strong>Color:</strong> Red | <strong>Planet:</strong> Mars</p>
+        <p>Fire personalities <strong>light up every room</strong>. They're magnetic, expressive, and driven to be seen. Fire warms and inspires others — but it can also burn out or consume. Fire types are natural performers, leaders, and catalysts.</p>
+        <p><strong>Strengths:</strong> Charismatic, passionate, generous, inspiring, quick-witted</p>
+        <p><strong>Challenges:</strong> Can be impulsive, attention-seeking, prone to burnout, emotionally intense</p>
+        <p><strong>Famous Fire types:</strong> Performers, motivational speakers, CEOs, anyone who thrives in the spotlight</p>
+        <p><em>If Fire is your Day Master, you are here to shine. Don't hide your light.</em></p>
+    </div>
+
+    <div class="element-card earth">
+        <span class="tag">🌍 EARTH · 土</span>
+        <h3>The Nurturer · Late Summer Energy</h3>
+        <p><strong>Keywords:</strong> Stability, nurture, patience, reliability, practicality</p>
+        <p><strong>Direction:</strong> Center | <strong>Season:</strong> Late Summer | <strong>Color:</strong> Yellow/Brown | <strong>Planet:</strong> Saturn</p>
+        <p>Earth personalities are the <strong>bedrock</strong> of any relationship or organization. They're steady, dependable, and deeply nurturing. Like the earth itself, they provide the foundation for others to grow. Earth types are natural caregivers, managers, and builders.</p>
+        <p><strong>Strengths:</strong> Loyal, practical, patient, grounded, trustworthy, empathetic</p>
+        <p><strong>Challenges:</strong> Can be stubborn, overly cautious, resistant to change, prone to worry</p>
+        <p><strong>Famous Earth types:</strong> Leaders who build institutions, healers, teachers, community organizers</p>
+        <p><em>If Earth is your Day Master, you are the anchor. People feel safe with you.</em></p>
+    </div>
+
+    <div class="element-card metal">
+        <span class="tag">⚔️ METAL · 金</span>
+        <h3>The Architect · Autumn Energy</h3>
+        <p><strong>Keywords:</strong> Precision, structure, discipline, justice, refinement</p>
+        <p><strong>Direction:</strong> West | <strong>Season:</strong> Autumn | <strong>Color:</strong> White/Gold | <strong>Planet:</strong> Venus</p>
+        <p>Metal personalities are <strong>architects of excellence</strong>. They value quality, precision, and truth above all. Like a finely crafted blade, they cut through chaos with clarity and purpose. Metal types are natural analysts, judges, and perfectionists.</p>
+        <p><strong>Strengths:</strong> Disciplined, precise, principled, elegant, sharp-minded</p>
+        <p><strong>Challenges:</strong> Can be rigid, critical, emotionally distant, perfectionistic to a fault</p>
+        <p><strong>Famous Metal types:</strong> Judges, architects, surgeons, designers, anyone who refines and perfects</p>
+        <p><em>If Metal is your Day Master, you have an eye for quality. You refine everything you touch.</em></p>
+    </div>
+
+    <div class="element-card water">
+        <span class="tag">💧 WATER · 水</span>
+        <h3>The Philosopher · Winter Energy</h3>
+        <p><strong>Keywords:</strong> Wisdom, depth, intuition, adaptability, mystery</p>
+        <p><strong>Direction:</strong> North | <strong>Season:</strong> Winter | <strong>Color:</strong> Blue/Black | <strong>Planet:</strong> Mercury</p>
+        <p>Water personalities are <strong>deep, intuitive, and wise</strong>. Like water itself, they adapt to any container, flow around obstacles, and find the lowest path — which is also the path of least resistance. Water types are natural philosophers, counselors, and strategists.</p>
+        <p><strong>Strengths:</strong> Wise, intuitive, adaptable, empathetic, persuasive, deep thinker</p>
+        <p><strong>Challenges:</strong> Can be overly sensitive, secretive, passive-aggressive, prone to melancholy</p>
+        <p><strong>Famous Water types:</strong> Philosophers, psychologists, strategists, artists with emotional depth</p>
+        <p><em>If Water is your Day Master, you feel deeply. Your emotional intelligence is your superpower.</em></p>
+    </div>
+
+    <div class="card">
+        <h2>How to Find Your Element</h2>
+        <p>In BaZi, your core element is your <strong>Day Master</strong> — the Heavenly Stem of your Day Pillar. There are 10 possible Stems, each assigned to one of the Five Elements (one Yin, one Yang per element):</p>
+        <ul>
+            <li><strong>Wood:</strong> 甲 (Yang) · 乙 (Yin)</li>
+            <li><strong>Fire:</strong> 丙 (Yang) · 丁 (Yin)</li>
+            <li><strong>Earth:</strong> 戊 (Yang) · 己 (Yin)</li>
+            <li><strong>Metal:</strong> 庚 (Yang) · 辛 (Yin)</li>
+            <li><strong>Water:</strong> 壬 (Yang) · 癸 (Yin)</li>
+        </ul>
+        <p>The only way to know for sure is to calculate your full BaZi chart. Your chart will show you not just your Day Master element, but also which elements are abundant or missing in your birth energy — and what that means for your personality, career, and relationships.</p>
+    </div>
+
+    <div class="card">
+        <h2>Element Imbalance: What It Means</h2>
+        <p>Very few people have perfectly balanced elements. Most charts have <strong>too much</strong> of one element and <strong>too little</strong> of another. This isn't bad — it creates your unique strengths and challenges.</p>
+        <ul>
+            <li><strong>Too much Fire:</strong> Intense, restless, prone to burnout — needs Water to cool</li>
+            <li><strong>Too much Wood:</strong> Overly ambitious, scattered — needs Metal to prune</li>
+            <li><strong>Too much Earth:</strong> Stuck, overprotective — needs Wood to break ground</li>
+            <li><strong>Too much Metal:</strong> Rigid, critical — needs Fire to soften</li>
+            <li><strong>Too much Water:</strong> Overwhelmed, secretive — needs Earth to contain</li>
+        </ul>
+        <p>Your BaZi chart will tell you exactly which elements support you and which challenge you — and how to balance them.</p>
+    </div>
+
+    <div class="card">
+        <h2>Find Your Element in 30 Seconds</h2>
+        <div class="cta-box">
+            <p>"I'm a Metal day master — now I understand why I've always been obsessed with quality and detail. It's in my BaZi."</p>
+            <a href="https://www.bzmli.com/?ref=elements" class="cta-btn">Get Your Free BaZi Chart →</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><a href="https://www.bzmli.com">Free BaZi Calculator</a> · <a href="https://www.bzmli.com/bazi-vs-western-astrology">BaZi vs Western Astrology</a> · <a href="https://www.bzmli.com/compatibility">Compatibility</a></p>
+        <p>The ancient art of Chinese astrology · 道法自然 天人合一</p>
+    </div>
+</div>
+</body>
+</html>

@@ -201,6 +201,16 @@ def compatibility():
                              api_configured=is_configured())
 
 
+@app.route('/bazi-vs-western-astrology')
+def guide_bazi_vs_western():
+    return render_template('guide_bazi_vs_western.html')
+
+
+@app.route('/five-elements')
+def guide_elements():
+    return render_template('guide_elements.html')
+
+
 @app.route('/robots.txt')
 def robots():
     return '''User-agent: *
@@ -222,6 +232,16 @@ def sitemap():
     <loc>https://www.bzmli.com/compatibility</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.bzmli.com/bazi-vs-western-astrology</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.bzmli.com/five-elements</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
 ''', 200, {'Content-Type': 'application/xml'}
