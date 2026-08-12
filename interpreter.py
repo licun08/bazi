@@ -185,6 +185,212 @@ def get_reading(bazi_data: dict, lang: str = 'en') -> str:
         return f"⚠️ **Error generating reading:** {str(e)}"
 
 
+def build_balance_section(balance: dict, lang: str = 'zh') -> str:
+    """Format the deterministic element-balance result for the AI prompt."""
+    if lang == 'zh':
+        return f"""## 五行平衡判断（系统已算好，请以此为准，不要自行更改）
+- 日主旺衰：{balance['strength_label']}
+- 喜用五行（补益）：{balance['favorable_label']}
+- 忌五行（需避）：{balance['unfavorable_label']}"""
+    return f"""## Element Balance (pre-calculated, treat as authoritative)
+- Day master strength: {balance['strength_label']}
+- Favorable elements (nourishing): {balance['favorable_label']}
+- Unfavorable elements (avoid): {balance['unfavorable_label']}"""
+
+
+def build_full_prompt(bazi_data: dict, balance: dict, lang: str = 'zh') -> str:
+    """One combined prompt producing reading + diet + exercise in a single call."""
+    pillars = bazi_data['pillars']
+    balance_section = build_balance_section(balance, lang)
+
+    if lang == 'zh':
+        prompt = f"""## 出生信息
+- 出生时间: {bazi_data['birth_datetime']}
+- 生肖: {bazi_data['year_animal']}
+
+## 八字排盘结果
+
+### 日主
+- 天干: {bazi_data['day_master']['stem']}（{bazi_data['day_master']['element']}，{bazi_data['day_master']['yinyang']}）
+
+### 四柱
+
+"""
+        for k, v in pillars.items():
+            prompt += f"""**{v['label']}**: {v['stem']}{v['branch']}
+- 天干: {v['stem']}（{v['stem_en']}）— 五行: {v['stem_element']}，{v['stem_yinyang']}
+- 地支: {v['branch']}（{v['branch_en']}）— 生肖: {v['branch_animal']} — 五行: {v['branch_element']}
+- 与日主关系（十神）: {v['shi_shen']}
+
+"""
+
+        prompt += f"""{balance_section}
+
+请严格按以下三个一级标题（## 开头，标题文字不要修改、不要加编号、不要遗漏）依次输出三部分内容。每部分内部的小节也要用 ## 二级标题（不要用 **加粗** 代替标题）。
+
+## 命理推演
+用 ## 二级标题分六个小节：日主核心分析、性格特征、事业与人生路径、人际关系、实用建议、人生阶段与时机。共600-800字，自然平实有洞察力，像一位有洞察力的朋友。
+
+## 五行食疗食谱
+基于喜用五行（{balance['favorable_label']}），用 ## 二级标题分三个小节：
+
+## 食补方向
+该补什么五行、对应颜色/味道/脏腑
+
+## 代表食材清单
+8-12种食材，简洁列出
+
+## 三餐示例
+早/午/晚各一道（菜名+主要食材）
+
+简洁实用，不要过度铺陈。
+
+## 适配运动
+基于喜用五行（{balance['favorable_label']}），用 ## 二级标题分三个小节：
+
+## 主推运动
+1-2项及理由
+
+## 强度与频率
+运动强度与建议频率
+
+## 不适合的运动
+需要避免的运动类型提醒
+"""
+        return prompt
+
+    prompt = f"""## Birth Information
+- Birth Date & Time: {bazi_data['birth_datetime']}
+- Chinese Zodiac Animal: {bazi_data['year_animal']}
+
+## BaZi (Four Pillars) Calculation
+
+### Day Master
+- Stem: {bazi_data['day_master']['stem']} ({bazi_data['day_master']['element']}, {bazi_data['day_master']['yinyang']})
+
+### The Four Pillars
+
+"""
+    for k, v in pillars.items():
+        prompt += f"""**{v['label']}**: {v['stem']}{v['branch']}
+- Heavenly Stem: {v['stem']} ({v['stem_en']}) — Element: {v['stem_element']}
+- Earthly Branch: {v['branch']} ({v['branch_en']}) — Animal: {v['branch_animal']} — Element: {v['branch_element']}
+- Relationship to Day Master (十神): {v['shi_shen']}
+
+"""
+
+    prompt += f"""{balance_section}
+
+Please output the following three sections in order, each starting with the exact ## heading below (do not modify, number, or omit the headings). Inside each section, use ## subheadings (do not use **bold** as a heading substitute).
+
+## Reading
+Use ## subheadings for six parts: Core Element Profile, Personality & Character, Career & Life Path, Relationships & Social Dynamics, Lucky Elements & Guidance, Life Seasons & Timing. Around 500-700 words, insightful and personalized.
+
+## Five Elements Diet
+Based on the favorable elements ({balance['favorable_label']}), use ## subheadings for three parts:
+
+## Dietary Direction
+Which element to nourish, associated colors/tastes/organs
+
+## Representative Ingredients
+8-12 items, concise
+
+## Sample Meals
+One breakfast, lunch and dinner (name + main ingredients)
+
+## Recommended Exercise
+Based on the favorable elements ({balance['favorable_label']}), use ## subheadings for three parts:
+
+## Top Exercises
+1-2 exercises and why
+
+## Intensity & Frequency
+Intensity and suggested frequency
+
+## Exercises to Avoid
+Exercise types to avoid
+"""
+    return prompt
+
+
+def split_sections(content: str, lang: str = 'zh') -> dict:
+    """Split the combined AI output into reading / diet / exercise."""
+    if lang == 'zh':
+        m1, m2, m3 = '## 命理推演', '## 五行食疗食谱', '## 适配运动'
+    else:
+        m1, m2, m3 = '## Reading', '## Five Elements Diet', '## Recommended Exercise'
+
+    i1 = content.find(m1)
+    if i1 == -1:
+        return {'reading': content, 'diet': '', 'exercise': ''}
+
+    i2 = content.find(m2)
+    i3 = content.find(m3)
+
+    reading = diet = exercise = ''
+    if i2 != -1:
+        reading = content[i1 + len(m1):i2]
+        if i3 != -1:
+            diet = content[i2 + len(m2):i3]
+            exercise = content[i3 + len(m3):]
+        else:
+            diet = content[i2 + len(m2):]
+    else:
+        reading = content[i1 + len(m1):]
+
+    return {
+        'reading': reading.strip(),
+        'diet': diet.strip(),
+        'exercise': exercise.strip(),
+    }
+
+
+def get_full_reading(bazi_data: dict, balance: dict, lang: str = 'zh') -> dict:
+    """Generate reading + diet + exercise in a single DeepSeek call."""
+    if not DEEPSEEK_API_KEY:
+        msg = {
+            'en': "⚠️ **DeepSeek API key not configured.**\n\nSet your DEEPSEEK_API_KEY.",
+            'zh': "⚠️ **DeepSeek API 密钥未配置。**\n\n请在 .env 文件中设置 DEEPSEEK_API_KEY。"
+        }
+        return {'reading': msg.get(lang, msg['en']), 'diet': '', 'exercise': ''}
+
+    prompt = build_full_prompt(bazi_data, balance, lang)
+    system_prompt = SYSTEM_PROMPTS.get(lang, SYSTEM_PROMPTS['en'])
+
+    headers = {
+        'Authorization': f'Bearer {DEEPSEEK_API_KEY}',
+        'Content-Type': 'application/json',
+    }
+
+    payload = {
+        'model': 'deepseek-chat',
+        'messages': [
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user', 'content': prompt},
+        ],
+        'temperature': 0.7,
+        'max_tokens': 4000,
+    }
+
+    try:
+        resp = requests.post(
+            f'{DEEPSEEK_BASE_URL}/v1/chat/completions',
+            headers=headers,
+            json=payload,
+            timeout=45,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        content = data['choices'][0]['message']['content']
+        return split_sections(content, lang)
+    except requests.exceptions.Timeout:
+        return {'reading': "⚠️ **Request timed out.** DeepSeek API did not respond.", 'diet': '', 'exercise': ''}
+    except requests.exceptions.HTTPError as e:
+        return {'reading': f"⚠️ **API Error ({resp.status_code}):** {str(e)}", 'diet': '', 'exercise': ''}
+    except Exception as e:
+        return {'reading': f"⚠️ **Error generating reading:** {str(e)}", 'diet': '', 'exercise': ''}
+
+
 def get_compatibility_reading(bazi1: dict, bazi2: dict, compat: dict, gender1: str = 'male', gender2: str = 'female', lang: str = 'zh') -> str:
     """Generate a compatibility reading using DeepSeek."""
     if not DEEPSEEK_API_KEY:

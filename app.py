@@ -5,6 +5,7 @@ Flask web application with DeepSeek-powered readings.
 import os
 import sys
 import io
+import json
 import base64
 import zlib
 from flask import Flask, render_template, request, jsonify, make_response
@@ -18,10 +19,11 @@ sys.path.insert(0, BASE_DIR)
 os.chdir(BASE_DIR)
 
 from bazi_calc import BaZiEngine, format_result_for_api
-from interpreter import get_reading, is_configured
+from interpreter import get_reading, get_full_reading, is_configured
 from solar_time import compute_adjusted_birth_time, search_city
 from compatibility import analyze as compat_analyze
 from bazi_scores import compute_scores, generate_hex_svg
+from wuxing_balance import compute_wuxing_balance
 
 app = Flask(__name__,
             template_folder=os.path.join(BASE_DIR, 'templates'),
@@ -115,28 +117,47 @@ def calculate():
         scores = compute_scores(bazi_data, lang=lang)
         hex_svg = generate_hex_svg(scores, lang=lang)
 
+        # Element balance / favorable-unfavorable elements (deterministic)
+        balance = compute_wuxing_balance(bazi_data, lang=lang)
+
         # Share mode:
-        #   'full'  = chart + AI reading (form POST, or GET with embedded reading)
-        #   'chart' = chart only (GET share link without embedded reading)
+        #   'full'  = chart + AI sections (form POST, or GET with embedded sections)
+        #   'chart' = chart only (GET share link without embedded sections)
         share_mode = 'full'
-        reading = None
+        reading = diet = exercise = None
         if share_data:
             cached = _decode_share_data(share_data)
             if cached is not None:
-                reading = cached
+                try:
+                    sections = json.loads(cached)
+                    reading = sections.get('reading', '')
+                    diet = sections.get('diet', '')
+                    exercise = sections.get('exercise', '')
+                except (ValueError, TypeError):
+                    # Backward-compatible: old share_data was a raw reading string
+                    reading = cached
+                    diet = exercise = ''
             else:
                 share_mode = 'chart'
         elif request.method == 'GET':
             share_mode = 'chart'
 
         if reading is None and share_mode == 'full':
-            reading = get_reading(bazi_data, lang=lang)
+            sections = get_full_reading(bazi_data, balance, lang)
+            reading = sections['reading']
+            diet = sections['diet']
+            exercise = sections['exercise']
 
         reading_html = markdown_to_html(reading) if reading else ''
+        diet_html = markdown_to_html(diet) if diet else ''
+        exercise_html = markdown_to_html(exercise) if exercise else ''
 
         return render_template('result.html',
                              bazi=bazi_data,
                              reading=reading_html,
+                             diet=diet_html,
+                             exercise=exercise_html,
+                             balance=balance,
                              scores=scores,
                              hex_svg=hex_svg,
                              lang=lang,
@@ -148,7 +169,7 @@ def calculate():
                                  'gender': gender, 'city': city, 'lang': lang,
                              },
                              share_mode=share_mode,
-                             share_reading=reading or '',
+                             share_sections={'reading': reading, 'diet': diet, 'exercise': exercise} if share_mode == 'full' else None,
                              api_configured=is_configured())
         
     except ValueError as e:

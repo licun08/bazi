@@ -146,6 +146,13 @@
         .dim-row .dval { font-size: 0.7em; color: #5c2e0e; flex: 0 0 28px; text-align: right; }
 
         .reading-body { font-size: 1em; line-height: 1.9; color: #3c3426; }
+        .balance-tags { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 4px; }
+        .balance-tag { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+            border: 1px solid rgba(139, 69, 19, 0.15); font-size: 0.82em; letter-spacing: 1px; }
+        .balance-tag .b-label { color: #8b7355; font-size: 0.85em; }
+        .balance-tag .b-val { color: #5c2e0e; font-weight: bold; letter-spacing: 2px; }
+        .balance-tag.fav { background: rgba(92, 46, 14, 0.06); border-color: rgba(92, 46, 14, 0.25); }
+        .balance-tag.avoid { background: rgba(139, 69, 19, 0.03); border-color: rgba(139, 69, 19, 0.12); }
         .reading-body h3 {
             font-size: 0.9em; font-weight: 400; color: #5c2e0e;
             margin-top: 20px; margin-bottom: 8px; letter-spacing: 2px;
@@ -306,6 +313,25 @@
         </div>
     </div>
 
+    <!-- Element Balance -->
+    <div class="section">
+        <div class="section-title">{% if lang == 'zh' %}五 行 平 衡{% else %}ELEMENT BALANCE{% endif %}</div>
+        <p style="text-align:center;font-size:0.95em;color:#5c2e0e;margin-bottom:4px;letter-spacing:1px;">
+            {% if lang == 'zh' %}日主 {{ balance.day_master_element }} · {{ balance.strength_label }}{% else %}Day Master {{ balance.day_master_element }} · {{ balance.strength_label }}{% endif %}
+        </p>
+        <p style="text-align:center;font-size:0.75em;color:#8b7355;margin-bottom:12px;">{{ balance.strength_desc }}</p>
+        <div class="balance-tags" style="justify-content:center;">
+            <div class="balance-tag fav">
+                <span class="b-label">{% if lang == 'zh' %}喜用 · 补益{% else %}Favorable{% endif %}</span>
+                <span class="b-val">{{ balance.favorable_label }}</span>
+            </div>
+            <div class="balance-tag avoid">
+                <span class="b-label">{% if lang == 'zh' %}忌神 · 需避{% else %}Unfavorable{% endif %}</span>
+                <span class="b-val">{{ balance.unfavorable_label }}</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Reading -->
     <div class="section">
         <div class="section-title">{% if lang == 'zh' %}命 理 推 演{% else %}Reading{% endif %}</div>
@@ -326,6 +352,44 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Diet -->
+    {% if share_mode == 'full' and diet %}
+    <div class="section">
+        <div class="section-title">{% if lang == 'zh' %}五 行 食 疗{% else %}FIVE ELEMENTS DIET{% endif %}</div>
+        <div class="reading-body">
+            {% for line in diet.split('\n') %}
+                {% if line.startswith('## ') %}
+                    <h3>{{ line.replace('## ', '') }}</h3>
+                {% elif line.startswith('### ') %}
+                    <h4 style="font-size:0.85em;font-weight:400;color:#5c2e0e;margin-top:16px;margin-bottom:6px;letter-spacing:1px;">{{ line.replace('### ', '') }}</h4>
+                {% elif line.startswith('# ') %}
+                {% elif line.strip() %}
+                    <p>{{ line | safe }}</p>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Exercise -->
+    {% if share_mode == 'full' and exercise %}
+    <div class="section">
+        <div class="section-title">{% if lang == 'zh' %}适 配 运 动{% else %}RECOMMENDED EXERCISE{% endif %}</div>
+        <div class="reading-body">
+            {% for line in exercise.split('\n') %}
+                {% if line.startswith('## ') %}
+                    <h3>{{ line.replace('## ', '') }}</h3>
+                {% elif line.startswith('### ') %}
+                    <h4 style="font-size:0.85em;font-weight:400;color:#5c2e0e;margin-top:16px;margin-bottom:6px;letter-spacing:1px;">{{ line.replace('### ', '') }}</h4>
+                {% elif line.startswith('# ') %}
+                {% elif line.strip() %}
+                    <p>{{ line | safe }}</p>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <a href="/?lang={{ lang }}" class="back-link">
         {% if lang == 'zh' %}← 另起一命{% else %}← New Reading{% endif %}
@@ -404,7 +468,7 @@
 
 <script>
 var SHARE_PARAMS = {{ birth_input | tojson }};
-var SHARE_READING = {{ (share_reading | tojson) if share_mode == 'full' else 'null' }};
+var SHARE_SECTIONS = {{ (share_sections | tojson) if share_mode == 'full' else 'null' }};
 
 function openShareModal() {
     document.getElementById('shareModal').style.display = 'block';
@@ -467,7 +531,7 @@ function shareChart(btn) {
     copyText(buildBaseUrl(), btn, '{% if lang == 'zh' %}✓ 图谱链接已复制{% else %}✓ Chart link copied{% endif %}');
 }
 function shareFull(btn) {
-    if (!SHARE_READING) {
+    if (!SHARE_SECTIONS) {
         alert('{% if lang == 'zh' %}此链接不包含 AI 解读，请由测算者分享「全部内容」链接{% else %}This link has no AI reading. Ask the chart owner to share the full link.{% endif %}');
         return;
     }
@@ -475,7 +539,7 @@ function shareFull(btn) {
         alert('{% if lang == 'zh' %}当前浏览器不支持完整分享，请使用「命盘图谱」分享{% else %}Full sharing is not supported in this browser. Use "Chart only" instead.{% endif %}');
         return;
     }
-    compressReading(SHARE_READING).then(function(data) {
+    compressReading(JSON.stringify(SHARE_SECTIONS)).then(function(data) {
         if (!data) {
             alert('{% if lang == 'zh' %}分享失败，请使用「命盘图谱」分享{% else %}Share failed. Use "Chart only" instead.{% endif %}');
             return;
