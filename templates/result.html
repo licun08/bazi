@@ -306,6 +306,9 @@
     <div class="section">
         <div class="section-title">{% if lang == 'zh' %}命 理 推 演{% else %}Reading{% endif %}</div>
         <div class="reading-body">
+            {% if share_mode == 'chart' %}
+            <p style="text-align:center;color:#b8a88a;padding:24px 0;font-size:0.85em;letter-spacing:1px;">🔒 {% if lang == 'zh' %}此链接仅含命盘图谱。完整解读由测算者分享，可请分享者发送「全部内容」链接。{% else %}This link contains the chart only. The full reading is shared by the chart owner — ask them for the complete link.{% endif %}</p>
+            {% else %}
             {% for line in reading.split('\n') %}
                 {% if line.startswith('## ') %}
                     <h3>{{ line.replace('## ', '') }}</h3>
@@ -316,6 +319,7 @@
                     <p>{{ line | safe }}</p>
                 {% endif %}
             {% endfor %}
+            {% endif %}
         </div>
     </div>
 
@@ -353,9 +357,19 @@
     </div>
 </div>
 
+<!-- Share menu -->
+<div id="shareMenu" style="display:none;position:fixed;bottom:84px;right:24px;z-index:30;background:#fffdf8;border:1px solid rgba(139,69,19,0.2);box-shadow:0 4px 16px rgba(44,36,22,0.18);min-width:200px;">
+    <div onclick="shareChart()" style="padding:12px 18px;cursor:pointer;font-size:0.8em;letter-spacing:1px;border-bottom:1px solid rgba(139,69,19,0.08);transition:background 0.2s;" onmouseover="this.style.background='rgba(139,69,19,0.05)'" onmouseout="this.style.background='transparent'">
+        📜 {% if lang == 'zh' %}命盘图谱（排盘+评分）{% else %}Chart only (pillars + scores){% endif %}
+    </div>
+    <div onclick="shareFull()" style="padding:12px 18px;cursor:pointer;font-size:0.8em;letter-spacing:1px;transition:background 0.2s;" onmouseover="this.style.background='rgba(139,69,19,0.05)'" onmouseout="this.style.background='transparent'">
+        📖 {% if lang == 'zh' %}全部内容（含AI解读）{% else %}Full content (incl. AI reading){% endif %}
+    </div>
+</div>
+
 <!-- Floating buttons -->
 <div style="position:fixed;bottom:24px;right:24px;z-index:20;display:flex;gap:8px;">
-    <a href="javascript:void(0)" onclick="copyShareLink(this)"
+    <a href="javascript:void(0)" onclick="toggleShareMenu(this)" id="shareBtn"
        style="display:flex;align-items:center;gap:6px;background:rgba(92,46,14,0.1);color:#5c2e0e;
               padding:10px 16px;text-decoration:none;letter-spacing:2px;font-size:0.8em;
               border:1px solid rgba(92,46,14,0.2);transition:all 0.2s;">
@@ -377,26 +391,83 @@
 </div>
 
 <script>
-function copyShareLink(btn) {
-    var url = location.href;
-    var copiedText = '{% if lang == 'zh' %}✓ 已复制{% else %}✓ Copied{% endif %}';
+var SHARE_PARAMS = {{ birth_input | tojson }};
+var SHARE_READING = {{ (share_reading | tojson) if share_mode == 'full' else 'null' }};
+
+function toggleShareMenu(btn) {
+    var menu = document.getElementById('shareMenu');
+    var show = menu.style.display === 'none';
+    menu.style.display = show ? 'block' : 'none';
+    btn.textContent = show ? '✕' : '{% if lang == 'zh' %}🔗 分享{% else %}🔗 Share{% endif %}';
+}
+function closeShareMenu() {
+    var menu = document.getElementById('shareMenu');
+    menu.style.display = 'none';
+    var btn = document.getElementById('shareBtn');
+    btn.textContent = '{% if lang == 'zh' %}🔗 分享{% else %}🔗 Share{% endif %}';
+}
+function buildBaseUrl() {
+    var p = SHARE_PARAMS;
+    var sp = new URLSearchParams();
+    sp.set('year', p.year); sp.set('month', p.month); sp.set('day', p.day);
+    sp.set('hour', p.hour); sp.set('minute', p.minute); sp.set('gender', p.gender);
+    if (p.city) sp.set('city', p.city);
+    sp.set('lang', p.lang);
+    return location.origin + '/calculate?' + sp.toString();
+}
+function bytesToBase64Url(bytes) {
+    var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function compressReading(text) {
+    if (typeof CompressionStream === 'undefined') return Promise.resolve(null);
+    var enc = new TextEncoder();
+    var stream = new Blob([enc.encode(text)]).stream().pipeThrough(new CompressionStream('deflate'));
+    return new Response(stream).arrayBuffer().then(function(buf) {
+        return bytesToBase64Url(new Uint8Array(buf));
+    });
+}
+function copyText(text, doneText) {
+    var btn = document.getElementById('shareBtn');
     function done(ok) {
         if (ok) {
             var orig = btn.textContent;
-            btn.textContent = copiedText;
+            btn.textContent = doneText;
+            closeShareMenu();
             setTimeout(function() { btn.textContent = orig; }, 2000);
         } else {
-            prompt('{% if lang == 'zh' %}复制链接：{% else %}Copy link:{% endif %}', url);
+            prompt('{% if lang == 'zh' %}复制链接：{% else %}Copy link:{% endif %}', text);
         }
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(
+        navigator.clipboard.writeText(text).then(
             function() { done(true); },
-            function() { done(fallbackCopy(url)); }
+            function() { done(fallbackCopy(text)); }
         );
     } else {
-        done(fallbackCopy(url));
+        done(fallbackCopy(text));
     }
+}
+function shareChart() {
+    copyText(buildBaseUrl(), '{% if lang == 'zh' %}✓ 图谱已复制{% else %}✓ Chart copied{% endif %}');
+}
+function shareFull() {
+    if (!SHARE_READING) {
+        alert('{% if lang == 'zh' %}此链接不包含 AI 解读，请由测算者分享「全部内容」链接{% else %}This link has no AI reading. Ask the chart owner to share the full link.{% endif %}');
+        return;
+    }
+    if (typeof CompressionStream === 'undefined') {
+        alert('{% if lang == 'zh' %}当前浏览器不支持完整分享，请使用「命盘图谱」分享{% else %}Full sharing is not supported in this browser. Use "Chart only" instead.{% endif %}');
+        return;
+    }
+    compressReading(SHARE_READING).then(function(data) {
+        if (!data) {
+            alert('{% if lang == 'zh' %}分享失败，请使用「命盘图谱」分享{% else %}Share failed. Use "Chart only" instead.{% endif %}');
+            return;
+        }
+        copyText(buildBaseUrl() + '&share_data=' + encodeURIComponent(data), '{% if lang == 'zh' %}✓ 全部已复制{% else %}✓ Full link copied{% endif %}');
+    });
 }
 function fallbackCopy(text) {
     var ta = document.createElement('textarea');

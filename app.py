@@ -4,6 +4,8 @@ Flask web application with DeepSeek-powered readings.
 """
 import os
 import sys
+import base64
+import zlib
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
 
@@ -25,6 +27,17 @@ engine = BaZiEngine()
 
 def get_lang():
     return request.args.get('lang', 'en')
+
+def _decode_share_data(data: str):
+    """Decode a compressed AI reading embedded in a share URL."""
+    if not data:
+        return None
+    try:
+        raw = base64.urlsafe_b64decode(data + '=' * (-len(data) % 4))
+        return zlib.decompress(raw).decode('utf-8')
+    except Exception:
+        return None
+
 
 def markdown_to_html(text: str) -> str:
     """Convert simple markdown formatting to HTML tags."""
@@ -57,6 +70,7 @@ def calculate():
     # Support both form POST and shareable GET URLs
     g = request.form if request.method == 'POST' else request.args
     lang = g.get('lang', 'en')
+    share_data = g.get('share_data', '')
     try:
         year = int(g['year'])
         month = int(g['month'])
@@ -83,13 +97,29 @@ def calculate():
         formatted = engine.get_formatted_pillars(result)
         bazi_data = format_result_for_api(result, formatted, dt)
         bazi_data['gender'] = gender
-        
-        reading = get_reading(bazi_data, lang=lang)
-        reading_html = markdown_to_html(reading)
 
-        # Compute entertainment scores
+        # Compute entertainment scores (deterministic, no API needed)
         scores = compute_scores(bazi_data, lang=lang)
         hex_svg = generate_hex_svg(scores, lang=lang)
+
+        # Share mode:
+        #   'full'  = chart + AI reading (form POST, or GET with embedded reading)
+        #   'chart' = chart only (GET share link without embedded reading)
+        share_mode = 'full'
+        reading = None
+        if share_data:
+            cached = _decode_share_data(share_data)
+            if cached is not None:
+                reading = cached
+            else:
+                share_mode = 'chart'
+        elif request.method == 'GET':
+            share_mode = 'chart'
+
+        if reading is None and share_mode == 'full':
+            reading = get_reading(bazi_data, lang=lang)
+
+        reading_html = markdown_to_html(reading) if reading else ''
 
         return render_template('result.html',
                              bazi=bazi_data,
@@ -99,6 +129,13 @@ def calculate():
                              lang=lang,
                              solar_info=solar_info,
                              city=city,
+                             birth_input={
+                                 'year': year, 'month': month, 'day': day,
+                                 'hour': hour, 'minute': minute,
+                                 'gender': gender, 'city': city, 'lang': lang,
+                             },
+                             share_mode=share_mode,
+                             share_reading=reading or '',
                              api_configured=is_configured())
         
     except ValueError as e:
