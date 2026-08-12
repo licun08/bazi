@@ -4,10 +4,13 @@ Flask web application with DeepSeek-powered readings.
 """
 import os
 import sys
+import io
 import base64
 import zlib
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 from datetime import datetime
+
+from PIL import Image, ImageDraw, ImageFont
 
 # ── Fix paths for Vercel serverless ──
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,10 +23,20 @@ from solar_time import compute_adjusted_birth_time, search_city
 from compatibility import analyze as compat_analyze
 from bazi_scores import compute_scores, generate_hex_svg
 
-app = Flask(__name__, 
+app = Flask(__name__,
             template_folder=os.path.join(BASE_DIR, 'templates'),
             static_folder=os.path.join(BASE_DIR, 'static'))
 engine = BaZiEngine()
+
+FONT_PATH = os.path.join(BASE_DIR, 'static', 'simhei.ttf')
+
+
+def _load_font(size: int):
+    """Load the bundled Chinese font, fall back to default if missing."""
+    try:
+        return ImageFont.truetype(FONT_PATH, size)
+    except Exception:
+        return ImageFont.load_default()
 
 def get_lang():
     return request.args.get('lang', 'zh')
@@ -148,6 +161,99 @@ def calculate():
                              error=f"Error: {str(e)}",
                              lang=lang,
                              api_configured=is_configured())
+
+@app.route('/og-image')
+def og_image():
+    """Generate a 1200x630 share-card image for a BaZi chart (used by og:image)."""
+    g = request.args
+    lang = g.get('lang', 'zh')
+    try:
+        year = int(g['year'])
+        month = int(g['month'])
+        day = int(g['day'])
+        hour = int(g.get('hour', 12))
+        minute = int(g.get('minute', 0))
+        gender = g.get('gender', 'male')
+        city = g.get('city', '').strip()
+
+        dt = datetime(year, month, day, hour, minute)
+        adjusted_dt = dt
+        if city:
+            adj = compute_adjusted_birth_time(year, month, day, hour, minute, city)
+            if adj['city_found']:
+                adjusted_dt = adj['adjusted_datetime']
+
+        result = engine.calculate(adjusted_dt)
+        formatted = engine.get_formatted_pillars(result)
+        bazi_data = format_result_for_api(result, formatted, dt)
+        bazi_data['gender'] = gender
+        scores = compute_scores(bazi_data, lang=lang)
+    except Exception:
+        return '', 400
+
+    W, H = 1200, 630
+    img = Image.new('RGB', (W, H), '#f5f0e8')
+    d = ImageDraw.Draw(img)
+
+    # ── Frames ──
+    d.rectangle([24, 24, W - 24, H - 24], outline='#8b4513', width=3)
+    d.rectangle([36, 36, W - 36, H - 36], outline='#c8a878', width=1)
+
+    # ── Title ──
+    f_title = _load_font(56)
+    title = '八字命盘 · AI 解读' if lang == 'zh' else 'BaZi Chart · AI Reading'
+    d.text((W // 2, 92), title, font=f_title, fill='#5c2e0e', anchor='mm')
+
+    f_sub = _load_font(30)
+    sub = f"生肖 {bazi_data['year_animal']} · {bazi_data['baZi']}"
+    d.text((W // 2, 152), sub, font=f_sub, fill='#8b7355', anchor='mm')
+
+    # ── Four pillars ──
+    pillar_keys = ['year_pillar', 'month_pillar', 'day_pillar', 'hour_pillar']
+    labels_cn = ['年 柱', '月 柱', '日 柱', '时 柱']
+    labels_en = ['YEAR', 'MONTH', 'DAY', 'HOUR']
+    box_w, box_h = 230, 240
+    xs = [105, 358, 611, 864]
+    top = 185
+    f_label = _load_font(26)
+    f_char = _load_font(74)
+    f_shi = _load_font(26)
+
+    for i, key in enumerate(pillar_keys):
+        p = bazi_data['pillars'][key]
+        x = xs[i]
+        is_day = key == 'day_pillar'
+        fill = '#fff8eb' if is_day else '#fffdf8'
+        d.rectangle([x, top, x + box_w, top + box_h], fill=fill,
+                    outline='#8b2500' if is_day else '#8b4513', width=2)
+        label = labels_cn[i] if lang == 'zh' else labels_en[i]
+        d.text((x + box_w // 2, top + 36), label, font=f_label, fill='#b8a88a', anchor='mm')
+        d.text((x + box_w // 2, top + 110), f"{p['stem']}{p['branch']}",
+               font=f_char, fill='#8b2500' if is_day else '#5c2e0e', anchor='mm')
+        d.text((x + box_w // 2, top + 205), p['shi_shen'].split(' (')[0],
+               font=f_shi, fill='#8b4513', anchor='mm')
+
+    # ── Day master + score row ──
+    f_dm = _load_font(36)
+    dm = bazi_data['day_master']
+    dm_text = f"日主 {dm['stem']}（{dm['element']} · {dm['yinyang']}）"
+    d.text((W // 2, 468), dm_text, font=f_dm, fill='#2c2416', anchor='mm')
+
+    f_score = _load_font(40)
+    score_text = f"综合评分 {scores['composite']} / 100 · {scores['title']}"
+    d.text((W // 2, 528), score_text, font=f_score, fill='#5c2e0e', anchor='mm')
+
+    # ── Footer ──
+    f_foot = _load_font(28)
+    d.text((W // 2, 588), 'www.bzmli.com', font=f_foot, fill='#b8a88a', anchor='mm')
+
+    buf = io.BytesIO()
+    img.save(buf, 'PNG', optimize=True)
+    resp = make_response(buf.getvalue())
+    resp.headers['Content-Type'] = 'image/png'
+    resp.headers['Cache-Control'] = 'public, max-age=86400'
+    return resp
+
 
 @app.route('/api/v1/reading', methods=['POST'])
 def api_reading():
