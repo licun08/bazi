@@ -374,7 +374,8 @@
             <button onclick="shareChart(this)" style="flex:1;padding:12px 8px;background:#5c2e0e;color:#f5f0e8;border:none;cursor:pointer;font-size:0.82em;letter-spacing:2px;font-family:inherit;">📜 {% if lang == 'zh' %}命盘图谱{% else %}Chart only{% endif %}</button>
             <button onclick="shareFull(this)" style="flex:1;padding:12px 8px;background:rgba(92,46,14,0.1);color:#5c2e0e;border:1px solid rgba(92,46,14,0.25);cursor:pointer;font-size:0.82em;letter-spacing:2px;font-family:inherit;">📖 {% if lang == 'zh' %}全部内容{% else %}Full content{% endif %}</button>
         </div>
-        <p style="text-align:center;font-size:0.72em;color:#b8a88a;margin-top:12px;letter-spacing:1px;line-height:1.8;">{% if lang == 'zh' %}发送到微信后显示上图卡片，朋友点击即可打开网站{% else %}Sending to WeChat shows the card above. Tap it to open the site.{% endif %}</p>
+        <button onclick="downloadCard()" style="width:100%;margin-top:10px;padding:12px 8px;background:rgba(92,46,14,0.06);color:#5c2e0e;border:1px solid rgba(92,46,14,0.15);cursor:pointer;font-size:0.82em;letter-spacing:2px;font-family:inherit;">🖼 {% if lang == 'zh' %}保存卡片图片{% else %}Save card image{% endif %}</button>
+        <p style="text-align:center;font-size:0.72em;color:#b8a88a;margin-top:12px;letter-spacing:1px;line-height:1.8;">{% if lang == 'zh' %}📌 微信中打开本页 → 右上角「···」→ 分享给朋友/朋友圈，即显示带图卡片，点击可跳转。<br>📎 直接复制链接粘贴到聊天为文字链接（微信规则），也可保存上图直接发图片。{% else %}📌 Open this page in WeChat → tap "···" → Share to a friend/moments to send a tappable image card.<br>📎 Copied links appear as plain text in chat (WeChat rule). You can also save the card image above.{% endif %}</p>
     </div>
 </div>
 
@@ -451,6 +452,16 @@ function copyText(text, btn, doneText) {
     } else {
         done(fallbackCopy(text));
     }
+}
+function downloadCard() {
+    var img = document.querySelector('#shareModal img');
+    if (!img) return;
+    var a = document.createElement('a');
+    a.href = img.src;
+    a.download = 'bazi-card.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
 function shareChart(btn) {
     copyText(buildBaseUrl(), btn, '{% if lang == 'zh' %}✓ 图谱链接已复制{% else %}✓ Chart link copied{% endif %}');
