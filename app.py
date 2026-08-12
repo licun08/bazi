@@ -143,10 +143,13 @@ def calculate():
             share_mode = 'chart'
 
         if reading is None and share_mode == 'full':
-            # 命理推演：保持原有解读逻辑不变
-            reading = get_reading(bazi_data, lang=lang)
-            # 食疗 + 运动：新增独立调用（基于喜用神）
-            de = get_diet_exercise(bazi_data, balance, lang)
+            # 命理推演（原逻辑）与 食疗+运动 并行调用，降低总耗时
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=2) as ex:
+                fut_reading = ex.submit(get_reading, bazi_data, lang=lang)
+                fut_de = ex.submit(get_diet_exercise, bazi_data, balance, lang)
+                reading = fut_reading.result()
+                de = fut_de.result()
             diet = de['diet']
             exercise = de['exercise']
 
