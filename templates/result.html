@@ -171,6 +171,23 @@
             letter-spacing: 2px; font-size: 0.82em;
             transition: background 0.2s; }
         .donation-btn:hover { background: #7a3d14; }
+        .wechat-qr { margin-top: 16px; }
+        .wechat-qr img {
+            width: 150px; height: 150px; cursor: pointer;
+            border: 1px solid rgba(139, 69, 19, 0.15); background: #fff; padding: 6px;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .wechat-qr img:hover { opacity: 0.85; transform: scale(1.03); }
+        .wechat-qr-label { font-size: 0.72em; color: #8b7355; margin-top: 8px; letter-spacing: 2px; }
+        #qrOverlay {
+            display: none; position: fixed; inset: 0; z-index: 100;
+            background: rgba(44, 36, 22, 0.78); text-align: center; cursor: pointer;
+        }
+        #qrOverlay img {
+            margin-top: 10vh; width: 300px; height: 300px;
+            background: #fff; padding: 14px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        }
+        #qrOverlay .close { color: #f5f0e8; margin-top: 16px; font-size: 0.82em; letter-spacing: 3px; }
 
         @media print { body { background: #fff; } .back-link { display: none; } }
         @media (max-width: 600px) {
@@ -304,13 +321,26 @@
 
     <div class="donation">
         {% if lang == 'zh' %}
-        <p class="donation-text">本工具永久免费。如果觉得有用，可以请我喝杯咖啡，支持服务器和 API 开销 ☕</p>
-        <a href="https://ko-fi.com/printsprofits" target="_blank" class="donation-btn">☕ 请我喝咖啡</a>
+        <p class="donation-text">算得准，请我喝杯茶 ☕ 感谢你的支持，用于维持服务器与 API 开销</p>
+        <div class="wechat-qr">
+            <img src="/static/wechat_qr.jpg" alt="微信收款码" title="点击放大"
+                 onclick="document.getElementById('qrOverlay').style.display='block'">
+            <div class="wechat-qr-label">微信扫码 · 打赏支持</div>
+        </div>
+        <a href="https://ko-fi.com/printsprofits" target="_blank" class="donation-btn" style="margin-top:8px;">☕ 请我喝咖啡</a>
         {% else %}
         <p class="donation-text">This tool is free and will always be free. If you find value in it, consider buying me a coffee to help cover API costs. ☕</p>
         <a href="https://ko-fi.com/printsprofits" target="_blank" class="donation-btn">☕ Buy me a coffee</a>
         {% endif %}
     </div>
+
+    {% if lang == 'zh' %}
+    <!-- WeChat QR overlay -->
+    <div id="qrOverlay" onclick="this.style.display='none'">
+        <img src="/static/wechat_qr.jpg" alt="微信收款码">
+        <div class="close">点击任意处关闭 ✕</div>
+    </div>
+    {% endif %}
 
     <div class="footer">
         <div class="cn">道法自然 · 天人合一</div>

@@ -13,3 +13,5 @@
 !railway.json
 !templates/
 !templates/*.html
+!static/
+!static/*
