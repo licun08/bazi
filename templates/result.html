@@ -6,7 +6,7 @@
     <title>{% if lang == 'zh' %}命盘 · 八字命理{% else %}BaZi Chart · Four Pillars of Destiny{% endif %}</title>
     <meta name="description" content="{% if lang == 'zh' %}{{ bazi.baZi }} · 八字命理分析{% else %}BaZi chart for {{ bazi.birth_datetime }}. Free Four Pillars of Destiny reading with AI-powered interpretation.{% endif %}">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://bzmli.com">
+    <link rel="canonical" href="https://www.bzmli.com">
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-VY7BDTGZWP"></script>
     <script>
@@ -171,6 +171,10 @@
             letter-spacing: 2px; font-size: 0.82em;
             transition: background 0.2s; }
         .donation-btn:hover { background: #7a3d14; }
+        .disclaimer {
+            text-align: center; font-size: 0.72em; color: #b8a88a;
+            margin-top: 24px; letter-spacing: 1px; line-height: 1.8;
+        }
         .wechat-qr { margin-top: 16px; }
         .wechat-qr img {
             width: 150px; height: 150px; cursor: pointer;
@@ -251,9 +255,9 @@
             <div style="margin-top:8px; font-size:0.85em; color:#8b7355;">
                 {% if lang == 'zh' %}
                 ⏱ 真太阳时修正: {{ solar_info.correction_minutes }}分（{{ solar_info.correction_text }}）
-                · 修正后: {% if solar_info.adjusted_hour < 10 %}0{% endif %}{{ solar_info.adjusted_hour }}:{% if solar_info.adjusted_minute < 10 %}0{% endif %}{{ solar_info.adjusted_minute }}
+                · 修正后: {% if solar_info.date_changed %}{{ solar_info.adjusted_date }} {% endif %}{% if solar_info.adjusted_hour < 10 %}0{% endif %}{{ solar_info.adjusted_hour }}:{% if solar_info.adjusted_minute < 10 %}0{% endif %}{{ solar_info.adjusted_minute }}
                 {% else %}
-                ⏱ Solar time correction: {{ solar_info.correction_minutes }} min · Adjusted: {% if solar_info.adjusted_hour < 10 %}0{% endif %}{{ solar_info.adjusted_hour }}:{% if solar_info.adjusted_minute < 10 %}0{% endif %}{{ solar_info.adjusted_minute }}
+                ⏱ Solar time correction: {{ solar_info.correction_minutes }} min · Adjusted: {% if solar_info.date_changed %}{{ solar_info.adjusted_date }} {% endif %}{% if solar_info.adjusted_hour < 10 %}0{% endif %}{{ solar_info.adjusted_hour }}:{% if solar_info.adjusted_minute < 10 %}0{% endif %}{{ solar_info.adjusted_minute }}
                 {% endif %}
             </div>
             {% endif %}
@@ -319,6 +323,8 @@
         {% if lang == 'zh' %}← 另起一命{% else %}← New Reading{% endif %}
     </a>
 
+    <p class="disclaimer">{% if lang == 'zh' %}※ 本命理推演仅供娱乐参考，请理性看待，勿作为重大决策依据{% else %}※ For entertainment purposes only. Please treat this reading with a grain of salt.{% endif %}</p>
+
     <div class="donation">
         {% if lang == 'zh' %}
         <p class="donation-text">算得准，请我喝杯茶 ☕ 感谢你的支持，用于维持服务器与 API 开销</p>
@@ -349,7 +355,13 @@
 
 <!-- Floating buttons -->
 <div style="position:fixed;bottom:24px;right:24px;z-index:20;display:flex;gap:8px;">
-    <a href="/?lang={{ lang }}" 
+    <a href="javascript:void(0)" onclick="copyShareLink(this)"
+       style="display:flex;align-items:center;gap:6px;background:rgba(92,46,14,0.1);color:#5c2e0e;
+              padding:10px 16px;text-decoration:none;letter-spacing:2px;font-size:0.8em;
+              border:1px solid rgba(92,46,14,0.2);transition:all 0.2s;">
+        {% if lang == 'zh' %}🔗 分享{% else %}🔗 Share{% endif %}
+    </a>
+    <a href="/?lang={{ lang }}"
        style="display:flex;align-items:center;gap:6px;background:rgba(92,46,14,0.1);color:#5c2e0e;
               padding:10px 16px;text-decoration:none;letter-spacing:2px;font-size:0.8em;
               border:1px solid rgba(92,46,14,0.2);transition:all 0.2s;">
@@ -363,5 +375,40 @@
         {% if lang == 'zh' %}合婚{% else %}Compatibility{% endif %} →
     </a>
 </div>
+
+<script>
+function copyShareLink(btn) {
+    var url = location.href;
+    var copiedText = '{% if lang == 'zh' %}✓ 已复制{% else %}✓ Copied{% endif %}';
+    function done(ok) {
+        if (ok) {
+            var orig = btn.textContent;
+            btn.textContent = copiedText;
+            setTimeout(function() { btn.textContent = orig; }, 2000);
+        } else {
+            prompt('{% if lang == 'zh' %}复制链接：{% else %}Copy link:{% endif %}', url);
+        }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(
+            function() { done(true); },
+            function() { done(fallbackCopy(url)); }
+        );
+    } else {
+        done(fallbackCopy(url));
+    }
+}
+function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { return document.execCommand('copy'); }
+    catch (e) { return false; }
+    finally { document.body.removeChild(ta); }
+}
+</script>
 </body>
 </html>

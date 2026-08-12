@@ -98,6 +98,9 @@ def get_true_solar_time(dt: datetime, city: dict) -> dict:
         'timezone': f'UTC{utc_offset:+.0f}',
         'is_dst': is_dst(dt, city['dst_start'], city['dst_end']),
         'original_time': dt.strftime('%H:%M'),
+        'adjusted_datetime': adjusted,
+        'adjusted_date': adjusted.strftime('%Y-%m-%d'),
+        'date_changed': adjusted.date() != dt.date(),
         'adjusted_hour': adjusted_hour,
         'adjusted_minute': adjusted_minute,
         'adjusted_time': f'{adjusted_hour:02d}:{adjusted_minute:02d}',
@@ -136,6 +139,9 @@ def compute_adjusted_birth_time(year: int, month: int, day: int, hour: int, minu
     info = get_true_solar_time(original, city)
     return {
         'original': original,
+        'adjusted_datetime': info['adjusted_datetime'],
+        'adjusted_date': info['adjusted_date'],
+        'date_changed': info['date_changed'],
         'adjusted_hour': info['adjusted_hour'],
         'adjusted_minute': info['adjusted_minute'],
         'correction': info,

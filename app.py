@@ -52,28 +52,30 @@ def city_search():
     results = search_city(q)
     return jsonify(results[:10])
 
-@app.route('/calculate', methods=['POST'])
+@app.route('/calculate', methods=['GET', 'POST'])
 def calculate():
-    lang = request.form.get('lang', 'en')
+    # Support both form POST and shareable GET URLs
+    g = request.form if request.method == 'POST' else request.args
+    lang = g.get('lang', 'en')
     try:
-        year = int(request.form['year'])
-        month = int(request.form['month'])
-        day = int(request.form['day'])
-        hour = int(request.form['hour'])
-        minute = int(request.form.get('minute', 0))
-        gender = request.form.get('gender', 'male')
-        city = request.form.get('city', '').strip()
-        
+        year = int(g['year'])
+        month = int(g['month'])
+        day = int(g['day'])
+        hour = int(g['hour'])
+        minute = int(g.get('minute', 0))
+        gender = g.get('gender', 'male')
+        city = g.get('city', '').strip()
+
         # Original clock time
         dt = datetime(year, month, day, hour, minute)
-        
-        # True solar time correction
+
+        # True solar time correction (uses full adjusted datetime incl. cross-day date)
         adjusted_dt = dt
         solar_info = None
         if city:
             adj = compute_adjusted_birth_time(year, month, day, hour, minute, city)
             if adj['city_found']:
-                adjusted_dt = datetime(year, month, day, adj['adjusted_hour'], adj['adjusted_minute'])
+                adjusted_dt = adj['adjusted_datetime']
                 solar_info = adj['correction']
         
         # Calculate BaZi using ADJUSTED time
