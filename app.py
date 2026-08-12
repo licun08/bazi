@@ -193,31 +193,32 @@ def og_image():
 
     W, H = 1200, 630
     img = Image.new('RGB', (W, H), '#f5f0e8')
-    d = ImageDraw.Draw(img)
 
     # ── Frames ──
-    d.rectangle([24, 24, W - 24, H - 24], outline='#8b4513', width=3)
-    d.rectangle([36, 36, W - 36, H - 36], outline='#c8a878', width=1)
+    d0 = ImageDraw.Draw(img)
+    d0.rectangle([24, 24, W - 24, H - 24], outline='#8b4513', width=3)
+    d0.rectangle([36, 36, W - 36, H - 36], outline='#c8a878', width=1)
 
     # ── Title ──
-    f_title = _load_font(56)
+    d = d0
+    f_title = _load_font(52)
     title = '八字命盘 · AI 解读' if lang == 'zh' else 'BaZi Chart · AI Reading'
-    d.text((W // 2, 92), title, font=f_title, fill='#5c2e0e', anchor='mm')
+    d.text((W // 2, 82), title, font=f_title, fill='#5c2e0e', anchor='mm')
 
-    f_sub = _load_font(30)
+    f_sub = _load_font(26)
     sub = f"生肖 {bazi_data['year_animal']} · {bazi_data['baZi']}"
-    d.text((W // 2, 152), sub, font=f_sub, fill='#8b7355', anchor='mm')
+    d.text((W // 2, 134), sub, font=f_sub, fill='#8b7355', anchor='mm')
 
     # ── Four pillars ──
     pillar_keys = ['year_pillar', 'month_pillar', 'day_pillar', 'hour_pillar']
     labels_cn = ['年 柱', '月 柱', '日 柱', '时 柱']
     labels_en = ['YEAR', 'MONTH', 'DAY', 'HOUR']
-    box_w, box_h = 230, 240
+    box_w, box_h = 230, 195
     xs = [105, 358, 611, 864]
-    top = 185
-    f_label = _load_font(26)
-    f_char = _load_font(74)
-    f_shi = _load_font(26)
+    top = 160
+    f_label = _load_font(24)
+    f_char = _load_font(64)
+    f_shi = _load_font(22)
 
     for i, key in enumerate(pillar_keys):
         p = bazi_data['pillars'][key]
@@ -227,25 +228,70 @@ def og_image():
         d.rectangle([x, top, x + box_w, top + box_h], fill=fill,
                     outline='#8b2500' if is_day else '#8b4513', width=2)
         label = labels_cn[i] if lang == 'zh' else labels_en[i]
-        d.text((x + box_w // 2, top + 36), label, font=f_label, fill='#b8a88a', anchor='mm')
-        d.text((x + box_w // 2, top + 110), f"{p['stem']}{p['branch']}",
+        d.text((x + box_w // 2, top + 28), label, font=f_label, fill='#b8a88a', anchor='mm')
+        d.text((x + box_w // 2, top + 98), f"{p['stem']}{p['branch']}",
                font=f_char, fill='#8b2500' if is_day else '#5c2e0e', anchor='mm')
-        d.text((x + box_w // 2, top + 205), p['shi_shen'].split(' (')[0],
+        d.text((x + box_w // 2, top + 172), p['shi_shen'].split(' (')[0],
                font=f_shi, fill='#8b4513', anchor='mm')
 
-    # ── Day master + score row ──
-    f_dm = _load_font(36)
-    dm = bazi_data['day_master']
-    dm_text = f"日主 {dm['stem']}（{dm['element']} · {dm['yinyang']}）"
-    d.text((W // 2, 468), dm_text, font=f_dm, fill='#2c2416', anchor='mm')
+    # ── Radar (star chart) on the left ──
+    radar = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    dr = ImageDraw.Draw(radar)
+    cx, cy, r = 270, 480, 95
+    axes = [(0, -1), (0.866, -0.5), (0.866, 0.5), (0, 1), (-0.866, 0.5), (-0.866, -0.5)]
+    dim_keys = scores['dimension_keys']
+    dim_vals = [scores['dimensions'][k] for k in dim_keys]
+    dim_names = scores['dimension_names']
 
-    f_score = _load_font(40)
-    score_text = f"综合评分 {scores['composite']} / 100 · {scores['title']}"
-    d.text((W // 2, 528), score_text, font=f_score, fill='#5c2e0e', anchor='mm')
+    def rpt(ratio, i):
+        return (cx + r * ratio * axes[i][0], cy + r * ratio * axes[i][1])
+
+    # grid rings
+    for pct in [20, 40, 60, 80, 100]:
+        poly = [rpt(pct / 100, i) for i in range(6)]
+        dr.polygon(poly, outline=(205, 185, 160, 255))
+    # spokes
+    for i in range(6):
+        dr.line([(cx, cy), rpt(1.0, i)], fill=(205, 185, 160, 255), width=1)
+    # data polygon
+    data_pts = [rpt(dim_vals[i] / 100, i) for i in range(6)]
+    dr.polygon(data_pts, fill=(92, 46, 14, 55), outline=(92, 46, 14, 255))
+    for i in range(6):
+        x, y = rpt(dim_vals[i] / 100, i)
+        dr.ellipse([x - 5, y - 5, x + 5, y + 5], fill=(92, 46, 14, 255))
+
+    img = img.convert('RGBA')
+    img.alpha_composite(radar)
+    d = ImageDraw.Draw(img)
+
+    # radar labels + center score
+    f_dim = _load_font(20)
+    for i in range(6):
+        x, y = rpt(1.30, i)
+        d.text((x, y), dim_names[i].replace('\n', ' '), font=f_dim,
+               fill=(139, 115, 85, 255), anchor='mm')
+    f_center = _load_font(36)
+    d.text((cx, cy), str(scores['composite']), font=f_center,
+           fill=(92, 46, 14, 255), anchor='mm')
+
+    # ── Title & score on the right ──
+    tx = 790  # right-side center
+    f_honor = _load_font(36)
+    d.text((tx, 448), scores['title'], font=f_honor, fill=(92, 46, 14, 255), anchor='mm')
+
+    f_lbl = _load_font(24)
+    lbl = '综合评分' if lang == 'zh' else 'COMPOSITE SCORE'
+    d.text((tx, 502), lbl, font=f_lbl, fill=(184, 168, 138, 255), anchor='mm')
+
+    f_big = _load_font(58)
+    d.text((tx, 560), f"{scores['composite']} / 100", font=f_big,
+           fill=(92, 46, 14, 255), anchor='mm')
 
     # ── Footer ──
-    f_foot = _load_font(28)
-    d.text((W // 2, 588), 'www.bzmli.com', font=f_foot, fill='#b8a88a', anchor='mm')
+    f_foot = _load_font(24)
+    d.text((W // 2, 608), 'www.bzmli.com', font=f_foot, fill=(184, 168, 138, 255), anchor='mm')
+
+    img = img.convert('RGB')
 
     buf = io.BytesIO()
     img.save(buf, 'PNG', optimize=True)
