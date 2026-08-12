@@ -19,7 +19,7 @@ sys.path.insert(0, BASE_DIR)
 os.chdir(BASE_DIR)
 
 from bazi_calc import BaZiEngine, format_result_for_api
-from interpreter import get_reading, get_full_reading, is_configured
+from interpreter import get_reading, get_diet_exercise, is_configured
 from solar_time import compute_adjusted_birth_time, search_city
 from compatibility import analyze as compat_analyze
 from bazi_scores import compute_scores, generate_hex_svg
@@ -143,10 +143,12 @@ def calculate():
             share_mode = 'chart'
 
         if reading is None and share_mode == 'full':
-            sections = get_full_reading(bazi_data, balance, lang)
-            reading = sections['reading']
-            diet = sections['diet']
-            exercise = sections['exercise']
+            # 命理推演：保持原有解读逻辑不变
+            reading = get_reading(bazi_data, lang=lang)
+            # 食疗 + 运动：新增独立调用（基于喜用神）
+            de = get_diet_exercise(bazi_data, balance, lang)
+            diet = de['diet']
+            exercise = de['exercise']
 
         reading_html = markdown_to_html(reading) if reading else ''
         diet_html = markdown_to_html(diet) if diet else ''

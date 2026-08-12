@@ -198,8 +198,8 @@ def build_balance_section(balance: dict, lang: str = 'zh') -> str:
 - Unfavorable elements (avoid): {balance['unfavorable_label']}"""
 
 
-def build_full_prompt(bazi_data: dict, balance: dict, lang: str = 'zh') -> str:
-    """One combined prompt producing reading + diet + exercise in a single call."""
+def build_diet_exercise_prompt(bazi_data: dict, balance: dict, lang: str = 'zh') -> str:
+    """Prompt for diet + exercise recommendations based on favorable elements."""
     pillars = bazi_data['pillars']
     balance_section = build_balance_section(balance, lang)
 
@@ -226,10 +226,7 @@ def build_full_prompt(bazi_data: dict, balance: dict, lang: str = 'zh') -> str:
 
         prompt += f"""{balance_section}
 
-请严格按以下三个一级标题（## 开头，标题文字不要修改、不要加编号、不要遗漏）依次输出三部分内容。每部分内部的小节也要用 ## 二级标题（不要用 **加粗** 代替标题）。
-
-## 命理推演
-用 ## 二级标题分六个小节：日主核心分析、性格特征、事业与人生路径、人际关系、实用建议、人生阶段与时机。共600-800字，自然平实有洞察力，像一位有洞察力的朋友。
+请严格按以下两个一级标题（## 开头，标题文字不要修改、不要加编号、不要遗漏）依次输出两部分内容。每部分内部的小节用 ## 二级标题（不要用 **加粗** 代替标题）。
 
 ## 五行食疗食谱
 基于喜用五行（{balance['favorable_label']}），用 ## 二级标题分三个小节：
@@ -281,10 +278,7 @@ def build_full_prompt(bazi_data: dict, balance: dict, lang: str = 'zh') -> str:
 
     prompt += f"""{balance_section}
 
-Please output the following three sections in order, each starting with the exact ## heading below (do not modify, number, or omit the headings). Inside each section, use ## subheadings (do not use **bold** as a heading substitute).
-
-## Reading
-Use ## subheadings for six parts: Core Element Profile, Personality & Character, Career & Life Path, Relationships & Social Dynamics, Lucky Elements & Guidance, Life Seasons & Timing. Around 500-700 words, insightful and personalized.
+Please output the following two sections in order, each starting with the exact ## heading below (do not modify, number, or omit the headings). Inside each section, use ## subheadings (do not use **bold** as a heading substitute).
 
 ## Five Elements Diet
 Based on the favorable elements ({balance['favorable_label']}), use ## subheadings for three parts:
@@ -313,48 +307,32 @@ Exercise types to avoid
     return prompt
 
 
-def split_sections(content: str, lang: str = 'zh') -> dict:
-    """Split the combined AI output into reading / diet / exercise."""
-    if lang == 'zh':
-        m1, m2, m3 = '## 命理推演', '## 五行食疗食谱', '## 适配运动'
-    else:
-        m1, m2, m3 = '## Reading', '## Five Elements Diet', '## Recommended Exercise'
+def split_diet_exercise(content: str, lang: str = 'zh') -> dict:
+    """Split the AI output into diet / exercise."""
+    m1 = '## 五行食疗食谱' if lang == 'zh' else '## Five Elements Diet'
+    m2 = '## 适配运动' if lang == 'zh' else '## Recommended Exercise'
 
     i1 = content.find(m1)
     if i1 == -1:
-        return {'reading': content, 'diet': '', 'exercise': ''}
+        return {'diet': content, 'exercise': ''}
 
     i2 = content.find(m2)
-    i3 = content.find(m3)
-
-    reading = diet = exercise = ''
     if i2 != -1:
-        reading = content[i1 + len(m1):i2]
-        if i3 != -1:
-            diet = content[i2 + len(m2):i3]
-            exercise = content[i3 + len(m3):]
-        else:
-            diet = content[i2 + len(m2):]
+        diet = content[i1 + len(m1):i2]
+        exercise = content[i2 + len(m2):]
     else:
-        reading = content[i1 + len(m1):]
+        diet = content[i1 + len(m1):]
+        exercise = ''
 
-    return {
-        'reading': reading.strip(),
-        'diet': diet.strip(),
-        'exercise': exercise.strip(),
-    }
+    return {'diet': diet.strip(), 'exercise': exercise.strip()}
 
 
-def get_full_reading(bazi_data: dict, balance: dict, lang: str = 'zh') -> dict:
-    """Generate reading + diet + exercise in a single DeepSeek call."""
+def get_diet_exercise(bazi_data: dict, balance: dict, lang: str = 'zh') -> dict:
+    """Generate diet + exercise recommendations in a single DeepSeek call."""
     if not DEEPSEEK_API_KEY:
-        msg = {
-            'en': "⚠️ **DeepSeek API key not configured.**\n\nSet your DEEPSEEK_API_KEY.",
-            'zh': "⚠️ **DeepSeek API 密钥未配置。**\n\n请在 .env 文件中设置 DEEPSEEK_API_KEY。"
-        }
-        return {'reading': msg.get(lang, msg['en']), 'diet': '', 'exercise': ''}
+        return {'diet': '', 'exercise': ''}
 
-    prompt = build_full_prompt(bazi_data, balance, lang)
+    prompt = build_diet_exercise_prompt(bazi_data, balance, lang)
     system_prompt = SYSTEM_PROMPTS.get(lang, SYSTEM_PROMPTS['en'])
 
     headers = {
@@ -369,7 +347,7 @@ def get_full_reading(bazi_data: dict, balance: dict, lang: str = 'zh') -> dict:
             {'role': 'user', 'content': prompt},
         ],
         'temperature': 0.7,
-        'max_tokens': 4000,
+        'max_tokens': 2000,
     }
 
     try:
@@ -382,13 +360,9 @@ def get_full_reading(bazi_data: dict, balance: dict, lang: str = 'zh') -> dict:
         resp.raise_for_status()
         data = resp.json()
         content = data['choices'][0]['message']['content']
-        return split_sections(content, lang)
-    except requests.exceptions.Timeout:
-        return {'reading': "⚠️ **Request timed out.** DeepSeek API did not respond.", 'diet': '', 'exercise': ''}
-    except requests.exceptions.HTTPError as e:
-        return {'reading': f"⚠️ **API Error ({resp.status_code}):** {str(e)}", 'diet': '', 'exercise': ''}
-    except Exception as e:
-        return {'reading': f"⚠️ **Error generating reading:** {str(e)}", 'diet': '', 'exercise': ''}
+        return split_diet_exercise(content, lang)
+    except Exception:
+        return {'diet': '', 'exercise': ''}
 
 
 def get_compatibility_reading(bazi1: dict, bazi2: dict, compat: dict, gender1: str = 'male', gender2: str = 'female', lang: str = 'zh') -> str:
