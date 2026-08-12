@@ -26,7 +26,7 @@ app = Flask(__name__,
 engine = BaZiEngine()
 
 def get_lang():
-    return request.args.get('lang', 'en')
+    return request.args.get('lang', 'zh')
 
 def _decode_share_data(data: str):
     """Decode a compressed AI reading embedded in a share URL."""
@@ -69,7 +69,7 @@ def city_search():
 def calculate():
     # Support both form POST and shareable GET URLs
     g = request.form if request.method == 'POST' else request.args
-    lang = g.get('lang', 'en')
+    lang = g.get('lang', 'zh')
     share_data = g.get('share_data', '')
     try:
         year = int(g['year'])
